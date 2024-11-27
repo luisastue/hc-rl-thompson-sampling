@@ -1,3 +1,4 @@
 .DS_Store
 dtr-bench/dirichlet/__pycache__/
 dtr-bench/dirichlet/data/
+dtr-bench/custom_dtr/__pycache__/
