@@ -25,6 +25,32 @@ TRUE_ENV_PARAMS = [
 ]
 
 
+def random_initial_state():
+    # returns a random initial state with all actions set to False
+    state = State(
+        random.randint(-1, 1),
+        random.randint(-1, 1),
+        random.randint(-1, 0),
+        random.randint(-2, 2),
+        random.choice([True, False]),
+        False,
+        False,
+        False
+    )
+    while get_reward(state) != 0:
+        state = State(
+            random.randint(-1, 1),
+            random.randint(-1, 1),
+            random.randint(-1, 0),
+            random.randint(-2, 2),
+            random.choice([True, False]),
+            False,
+            False,
+            False
+        )
+    return state
+
+
 def sample_from_uniform():
     return [np.random.beta(1, 1) for _ in len(TRUE_ENV_PARAMS)]
 
@@ -148,7 +174,7 @@ class SepsisEnv(gym.Env):
         reward = get_reward(next_state)
         self.state = ix
         self.step_count += 1
-        done = reward != 0 or self.step_count >= self.max_episode_length
+        done = self.step_count >= self.max_episode_length
         return self.state, reward, done, False, {"step_count": self.step_count, "previous": state, "action": action, "next_state": next_state}
 
 

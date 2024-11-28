@@ -84,18 +84,3 @@ action_to_index = {action: i for i, action in enumerate(ACTIONS)}
 
 def random_policy():
     return {state: random.choice(ACTIONS) for state in STATES}
-
-
-def random_initial_state():
-    # returns a random initial state with all actions set to False
-
-    return State(
-        random.randint(-1, 1),
-        random.randint(-1, 1),
-        random.randint(-1, 0),
-        random.randint(-2, 2),
-        random.choice([True, False]),
-        False,
-        False,
-        False
-    )
