@@ -1,8 +1,8 @@
 import os
-import pickle
+import dill as pickle
 import stable_baselines3 as sb3
-from ..sepsis_env.sepsis_types import *
-from ..sepsis_env.sepsis_gym import *
+from custom_sepsis.sepsis_env.sepsis_types import *
+from custom_sepsis.sepsis_env.sepsis_gym import *
 import numpy as np
 from typing import List
 import matplotlib.pyplot as plt
@@ -42,10 +42,8 @@ class Training:
 
     def get_policy(self):
         if self.policy is None:
-            self.policy = []
-            for state_ix in range(n_states):
-                action = self.model.predict(state_ix, deterministic=True)[0]
-                self.policy.append(action)
+            self.policy = {state:  ACTIONS[self.model.predict(state_ix, deterministic=True)[
+                0]] for state_ix, state in enumerate(STATES)}
         return self.policy
 
     def evaluate_policy(self, n_episodes: int):

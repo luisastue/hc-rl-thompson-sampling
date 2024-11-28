@@ -1,7 +1,5 @@
 import gymnasium as gym
 import numpy as np
-import pickle
-import os
 import stable_baselines3 as sb3
 from ...sepsis_env import *
 
@@ -48,14 +46,12 @@ def transition_model(dirichlet_counts=np.ones((n_states, n_actions, n_states))):
     return model
 
 
-def update_state_counts(episodes, state_counts=np.ones((n_states, n_actions, n_states))):
-    for episode in episodes:
-        for i, state in enumerate(episode.visited[:-1]):
-            action = episode.policy[state_to_index[state]]
-            next_state = episode.visited[i + 1]
-            state_counts[state_to_index[state], action,
-                         state_to_index[next_state]] += 1
-
+def update_state_counts(episode, state_counts=np.ones((n_states, n_actions, n_states))):
+    for i, state in enumerate(episode.visited[:-1]):
+        action = episode.policy[state]
+        next_state = episode.visited[i + 1]
+        state_counts[state_to_index[state], action_to_index[action],
+                     state_to_index[next_state]] += 1
     return state_counts
 
 
@@ -99,6 +95,7 @@ def matrix_value_iteration(prev_V, transition_model, gamma=0.99, theta=1e-6):
             break
 
     # Derive policy: the action that maximizes Q-value for each state
-    policy = np.argmax(Q, axis=1)
+    pol = np.argmax(Q, axis=1)
+    policy = {STATES[i]: ACTIONS[action] for i, action in enumerate(pol)}
 
     return policy, V

@@ -9,8 +9,9 @@ Action = namedtuple('Action', ['abx', 'vaso', 'vent'])
 State = namedtuple('State', ['hr', 'bp', 'o2', 'glu',
                    'diabetic', 'abx', 'vaso', 'vent'])
 
+EnvParameters = List[float]
 
-EnvParameters = namedtuple('EnvParameters', [
+param_names = [
     'abx_on_hr_H_N',
     'abx_on_bp_H_N',
     'abx_withdrawn_hr_N_H',
@@ -29,14 +30,15 @@ EnvParameters = namedtuple('EnvParameters', [
     'diab_vaso_withdrawn_bp_H_N',
     'fluct',
     'diab_fluct_glu'
-])
+]
+param_to_index = {param: i for i, param in enumerate(param_names)}
 
 
 class Level(Enum):
+    SUPER_LOW = -2
     LOW = -1
     NORMAL = 0
     HIGH = 1
-    SUPER_LOW = -2
     SUPER_HIGH = 2
 
 
@@ -49,49 +51,49 @@ ACTIONS = [
 
 STATES = [
     State(hr, bp, o2, glu, diabetic, abx, vaso, vent)
-    for hr in [Level.LOW, Level.NORMAL, Level.HIGH]
-    for bp in [Level.LOW, Level.NORMAL, Level.HIGH]
-    for o2 in [Level.LOW, Level.NORMAL]
-    for glu in [Level.SUPER_LOW, Level.LOW, Level.NORMAL, Level.HIGH, Level.SUPER_HIGH]
+    for hr in [Level.LOW.value, Level.NORMAL.value, Level.HIGH.value]
+    for bp in [Level.LOW.value, Level.NORMAL.value, Level.HIGH.value]
+    for o2 in [Level.LOW.value, Level.NORMAL.value]
+    for glu in [Level.SUPER_LOW.value, Level.LOW.value, Level.NORMAL.value, Level.HIGH.value, Level.SUPER_HIGH.value]
     for diabetic in [True, False]
     for abx in [True, False]
     for vaso in [True, False]
     for vent in [True, False]
 ]
 
+Policy = dict[State, Action]
+
 
 class Episode:
     def __init__(self,
-                 policy: Optional[List[int]] = None,
+                 policy: Optional[Policy] = None,
                  rewards: List[float] = None,
                  visited: Optional[List[int]] = None):
         # Default to an empty list if None
-        self.policy: Optional[List[int]] = policy
+        self.policy: Optional[Policy] = policy
         # Default to an empty list if None
         self.rewards: List[float] = rewards or []
         # Default to an empty list if None
-        self.visited: Optional[List[int]] = visited or []
+        self.visited: Optional[List[State]] = visited or []
         self.date: str = str(np.datetime64('now'))
 
 
 state_to_index = {state: i for i, state in enumerate(STATES)}
 action_to_index = {action: i for i, action in enumerate(ACTIONS)}
 
-Policy = List[int]  # for each state, index of the action to take
-
 
 def random_policy():
-    return [action_to_index[random.choice(ACTIONS)] for _ in STATES]
+    return {state: random.choice(ACTIONS) for state in STATES}
 
 
 def random_initial_state():
     # returns a random initial state with all actions set to False
 
     return State(
-        Level(random.randint(-1, 1)),
-        Level(random.randint(-1, 1)),
-        Level(random.randint(-1, 0)),
-        Level(random.randint(-2, 2)),
+        random.randint(-1, 1),
+        random.randint(-1, 1),
+        random.randint(-1, 0),
+        random.randint(-2, 2),
         random.choice([True, False]),
         False,
         False,

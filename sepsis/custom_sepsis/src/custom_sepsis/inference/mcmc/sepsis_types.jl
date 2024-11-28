@@ -1,5 +1,5 @@
 module SepsisTypes
-export Action, Level, State, Policy, Episode, EnvParameters
+export Action, Level, SUPER_LOW, LOW, NORMAL, HIGH, SUPER_HIGH, State, Policy, EnvParameters, get_env_params, STATES, ACTIONS, to_state, to_action, to_policy
 
 struct Action
     abx::Bool
@@ -38,13 +38,23 @@ struct State
     end
 end
 
-const Policy = Dict{State,Action}
-
-struct Episode
-    policy::Policy
-    rewards::Vector{Float64}
-    visited::Vector{State}
+function to_state(state::Tuple)::State
+    hr, bp, o2, glu, diabetic, abx, vaso, vent = state
+    return State(Level(hr), Level(bp), Level(o2), Level(glu), diabetic, abx, vaso, vent)
 end
+function to_action(action::Tuple)::Action
+    return Action(action...)
+end
+
+function to_policy(policy::Dict{Any,Any})::Policy
+    pol = Policy()
+    for (state, action) in policy
+        pol[to_state(state)] = to_action(action)
+    end
+    return pol
+end
+
+const Policy = Dict{State,Action}
 
 struct EnvParameters
     abx_on_hr_H_N::Float64
@@ -66,4 +76,9 @@ struct EnvParameters
     fluct::Float64
     diab_fluct_glu::Float64
 end
+
+function get_env_params(p::EnvParameters)::Vector{Float64}
+    return [getfield(p, f) for f in fieldnames(EnvParameters)]
+end
+
 end

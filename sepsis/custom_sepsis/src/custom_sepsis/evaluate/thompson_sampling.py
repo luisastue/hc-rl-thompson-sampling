@@ -1,5 +1,5 @@
 import os
-import pickle
+import dill as pickle
 import stable_baselines3 as sb3
 import numpy as np
 from typing import List

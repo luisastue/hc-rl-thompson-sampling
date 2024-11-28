@@ -3,7 +3,7 @@ import numpy as np
 from .sepsis_types import *
 from typing import List
 
-TRUE_ENV_PARAMS = EnvParameters(
+TRUE_ENV_PARAMS = [
     0.5,
     0.5,
     0.1,
@@ -22,29 +22,11 @@ TRUE_ENV_PARAMS = EnvParameters(
     0.05,
     0.1,
     0.3
-)
+]
 
 
 def sample_from_uniform():
-    return EnvParameters(
-        np.random.beta(1, 1),
-        np.random.beta(1, 1),
-        np.random.beta(1, 1),
-        np.random.beta(1, 1),
-        np.random.beta(1, 1),
-        np.random.beta(1, 1),
-        np.random.beta(1, 1),
-        np.random.beta(1, 1),
-        np.random.beta(1, 1),
-        np.random.beta(1, 1),
-        np.random.beta(1, 1),
-        np.random.beta(1, 1),
-        np.random.beta(1, 1),
-        np.random.beta(1, 1),
-        np.random.beta(1, 1),
-        np.random.beta(1, 1),
-        np.random.beta(1, 1),
-        np.random.beta(1, 1))
+    return [np.random.beta(1, 1) for _ in len(TRUE_ENV_PARAMS)]
 
 
 def get_next_state(env_params: EnvParameters, state: State, action: Action):
@@ -55,85 +37,82 @@ def get_next_state(env_params: EnvParameters, state: State, action: Action):
 
     # Antibiotics -----------------------------
     if action.abx:
-        if state.hr == Level.HIGH and np.random.rand() < env_params.abx_on_hr_H_N:
-            hr = Level.NORMAL
-        if state.bp == Level.HIGH and np.random.rand() < env_params.abx_on_bp_H_N:
-            bp = Level.NORMAL
+        if state.hr == Level.HIGH.value and np.random.rand() < env_params[param_to_index['abx_on_hr_H_N']]:
+            hr = Level.NORMAL.value
+        if state.bp == Level.HIGH.value and np.random.rand() < env_params[param_to_index['abx_on_bp_H_N']]:
+            bp = Level.NORMAL.value
     elif action.abx == False and state.abx:  # withdrawn
-        if state.hr == Level.NORMAL and np.random.rand() < env_params.abx_withdrawn_hr_N_H:
-            hr = Level.HIGH
-        if state.bp == Level.NORMAL and np.random.rand() < env_params.abx_withdrawn_bp_N_H:
-            bp = Level.HIGH
+        if state.hr == Level.NORMAL.value and np.random.rand() < env_params[param_to_index['abx_withdrawn_hr_N_H']]:
+            hr = Level.HIGH.value
+        if state.bp == Level.NORMAL.value and np.random.rand() < env_params[param_to_index['abx_withdrawn_bp_N_H']]:
+            bp = Level.HIGH.value
     # Ventilation -----------------------------
     if action.vent:
-        if state.o2 == Level.LOW and np.random.rand() < env_params.vent_on_o2_L_N:
-            o2 = Level.NORMAL
+        if state.o2 == Level.LOW.value and np.random.rand() < env_params[param_to_index['vent_on_o2_L_N']]:
+            o2 = Level.NORMAL.value
     elif action.vent == False and state.vent:  # withdrawn
-        if state.o2 == Level.NORMAL and np.random.rand() < env_params.vent_withdrawn_o2_N_L:
-            o2 = Level.LOW
+        if state.o2 == Level.NORMAL.value and np.random.rand() < env_params[param_to_index['vent_withdrawn_o2_N_L']]:
+            o2 = Level.LOW.value
     # Vasopressors ----------------------------
     if state.diabetic == False:
         if action.vaso:
             # blood pressure ---------------------
-            if state.bp == Level.LOW and np.random.rand() < env_params.nond_vaso_on_bp_L_N:
-                bp = Level.NORMAL
-            if state.bp == Level.NORMAL and np.random.rand() < env_params.nond_vaso_on_bp_N_H:
-                bp = Level.HIGH
+            if state.bp == Level.LOW.value and np.random.rand() < env_params[param_to_index['nond_vaso_on_bp_L_N']]:
+                bp = Level.NORMAL.value
+            if state.bp == Level.NORMAL.value and np.random.rand() < env_params[param_to_index['nond_vaso_on_bp_N_H']]:
+                bp = Level.HIGH.value
         elif action.vaso == False and state.vaso:  # withdrawn
-            if state.bp == Level.NORMAL and np.random.rand() < env_params.nond_vaso_withdrawn_bp_N_L:
-                bp = Level.LOW
-            if state.bp == Level.HIGH and np.random.rand() < env_params.nond_vaso_withdrawn_bp_H_N:
-                bp = Level.NORMAL
+            if state.bp == Level.NORMAL.value and np.random.rand() < env_params[param_to_index['nond_vaso_withdrawn_bp_N_L']]:
+                bp = Level.LOW.value
+            if state.bp == Level.HIGH.value and np.random.rand() < env_params[param_to_index['nond_vaso_withdrawn_bp_H_N']]:
+                bp = Level.NORMAL.value
     elif state.diabetic == True:
         if action.vaso:
             # blood pressure ---------------------
-            if state.bp == Level.LOW and np.random.rand() < env_params.diab_vaso_on_bp_L_N:
-                bp = Level.NORMAL
-            if state.bp == Level.LOW and np.random.rand() < env_params.diab_vaso_on_bp_L_H:
-                bp = Level.HIGH
-            if state.bp == Level.NORMAL and np.random.rand() < env_params.diab_vaso_on_bp_N_H:
-                bp = Level.HIGH
+            if state.bp == Level.LOW.value and np.random.rand() < env_params[param_to_index['diab_vaso_on_bp_L_N']]:
+                bp = Level.NORMAL.value
+            if state.bp == Level.LOW.value and np.random.rand() < env_params[param_to_index['diab_vaso_on_bp_L_H']]:
+                bp = Level.HIGH.value
+            if state.bp == Level.NORMAL.value and np.random.rand() < env_params[param_to_index['diab_vaso_on_bp_N_H']]:
+                bp = Level.HIGH.value
             # glucose -----------------------------
-            if state.glu == Level.SUPER_LOW and np.random.rand() < env_params.diab_vaso_on_glu_up:
-                glu = Level.LOW
-            if state.glu == Level.LOW and np.random.rand() < env_params.diab_vaso_on_glu_up:
-                glu = Level.NORMAL
-            if state.glu == Level.NORMAL and np.random.rand() < env_params.diab_vaso_on_glu_up:
-                glu = Level.HIGH
-            if state.glu == Level.HIGH and np.random.rand() < env_params.diab_vaso_on_glu_up:
-                glu = Level.SUPER_HIGH
+            if state.glu == Level.SUPER_LOW.value and np.random.rand() < env_params[param_to_index['diab_vaso_on_glu_up']]:
+                glu = Level.LOW.value
+            if state.glu == Level.LOW.value and np.random.rand() < env_params[param_to_index['diab_vaso_on_glu_up']]:
+                glu = Level.NORMAL.value
+            if state.glu == Level.NORMAL.value and np.random.rand() < env_params[param_to_index['diab_vaso_on_glu_up']]:
+                glu = Level.HIGH.value
+            if state.glu == Level.HIGH.value and np.random.rand() < env_params[param_to_index['diab_vaso_on_glu_up']]:
+                glu = Level.SUPER_HIGH.value
         elif action.vaso == False and state.vaso:  # withdrawn
-            if state.bp == Level.NORMAL and np.random.rand() < env_params.diab_vaso_withdrawn_bp_N_L:
-                bp = Level.LOW
-            if state.bp == Level.HIGH and np.random.rand() < env_params.diab_vaso_withdrawn_bp_H_N:
-                bp = Level.NORMAL
+            if state.bp == Level.NORMAL.value and np.random.rand() < env_params[param_to_index['diab_vaso_withdrawn_bp_N_L']]:
+                bp = Level.LOW.value
+            if state.bp == Level.HIGH.value and np.random.rand() < env_params[param_to_index['diab_vaso_withdrawn_bp_H_N']]:
+                bp = Level.NORMAL.value
 
     # Fluctuations ----------------------------
     # random fluctuations only if no change in treatment
-    if state.abx == action.abx and np.random.rand() < env_params.fluct:
+    if state.abx == action.abx and np.random.rand() < env_params[param_to_index['fluct']]:
         # heart rate is only affected by antibiotics
-        hr = Level(
-            max(min(state.hr.value + np.random.choice([-1, 1]), 1), -1))
-    if state.abx == action.abx and state.vaso == action.vaso and np.random.rand() < env_params.fluct:
+        hr = max(min(state.hr + np.random.choice([-1, 1]), 1), -1)
+    if state.abx == action.abx and state.vaso == action.vaso and np.random.rand() < env_params[param_to_index['fluct']]:
         # heart rate is affected by antibiotics and vasopressors --> both need to stay the same for fluctuation
-        bp = Level(
-            max(min(state.bp.value + np.random.choice([-1, 1]), 1), -1))
-    if state.vent == action.vent and np.random.rand() < env_params.fluct:
+        bp = max(min(state.bp + np.random.choice([-1, 1]), 1), -1)
+    if state.vent == action.vent and np.random.rand() < env_params[param_to_index['fluct']]:
         # oxygen is only affected by ventilation
-        o2 = Level(
-            max(min(state.o2.value + np.random.choice([-1, 1]), 0), -1))
-    glu_prob = env_params.diab_fluct_glu if state.diabetic else env_params.fluct
+        o2 = max(min(state.o2 + np.random.choice([-1, 1]), 0), -1)
+    glu_prob = env_params[param_to_index['diab_fluct_glu']
+                          ] if state.diabetic else env_params[param_to_index['fluct']]
     if state.vaso == action.vaso and np.random.rand() < glu_prob:
         # glucose is only affected by vasopressors
-        glu = Level(
-            max(min(state.glu.value + np.random.choice([-1, 1]), 2), -2))
+        glu = max(min(state.glu + np.random.choice([-1, 1]), 2), -2)
 
     return State(hr, bp, o2, glu, state.diabetic, action.abx, action.vaso, action.vent)
 
 
 def get_reward(state: State):
     critical_counts = sum(
-        1 for c in [state.hr, state.bp, state.o2, state.glu] if c != Level.NORMAL)
+        1 for c in [state.hr, state.bp, state.o2, state.glu] if c != Level.NORMAL.value)
     if critical_counts >= 3:
         return -1
     elif critical_counts == 0 and not state.abx and not state.vaso and not state.vent:
@@ -176,17 +155,16 @@ class SepsisEnv(gym.Env):
 true_env = SepsisEnv(TRUE_ENV_PARAMS)
 
 
-def run_episode(policy: List[int]):
-    state_ix = true_env.reset()[0]
-    state = STATES[state_ix]
+def run_episode(policy: Policy):
+    obs = true_env.reset()[0]
+    state = STATES[obs]
     visited, rewards = [state], []
     terminated = False
     while not terminated:
-        action = policy[state_ix]
+        action = action_to_index[policy[state]]
         obs, reward, terminated, truncated, info = true_env.step(action)
-        new_state = STATES[obs]
-        visited.append(new_state)
+        state = STATES[obs]
+        visited.append(state)
         rewards.append(reward)
-        state = new_state
 
     return Episode(policy, rewards, visited)
