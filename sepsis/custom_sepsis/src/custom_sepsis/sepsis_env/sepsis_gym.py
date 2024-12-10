@@ -174,7 +174,7 @@ class SepsisEnv(gym.Env):
         reward = get_reward(next_state)
         self.state = ix
         self.step_count += 1
-        done = self.step_count >= self.max_episode_length
+        done = (reward != 0 or self.step_count >= self.max_episode_length)
         return self.state, reward, done, False, {"step_count": self.step_count, "previous": state, "action": action, "next_state": next_state}
 
 

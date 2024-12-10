@@ -175,6 +175,7 @@ end
     # done = false
     for t in 1:10
         new_state = {:get_next => t} ~ get_next_state(beliefs, state, policy[state])
+
         hr = {:new_state => t => :hr} ~ labeled_categorical([Int(new_state.hr)], [1])
         bp = {:new_state => t => :bp} ~ labeled_categorical([Int(new_state.bp)], [1])
         o2 = {:new_state => t => :o2} ~ labeled_categorical([Int(new_state.o2)], [1])
@@ -183,6 +184,7 @@ end
         abx = {:new_state => t => :abx} ~ labeled_categorical([Int(new_state.abx)], [1])
         vaso = {:new_state => t => :vaso} ~ labeled_categorical([Int(new_state.vaso)], [1])
         vent = {:new_state => t => :vent} ~ labeled_categorical([Int(new_state.vent)], [1])
+
         push!(states, new_state)
         reward = get_reward(new_state)
         # reward = {:reward => t} ~ labeled_categorical([Int(get_reward(new_state))], [1])

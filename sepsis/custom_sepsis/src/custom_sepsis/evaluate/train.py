@@ -40,6 +40,17 @@ class Training:
         self.model = mod
         return object_path, model_path
 
+    def retrain(self, env, n_iter: int):
+        self.model.set_env(env)
+        reward_callback = CustomLoggingCallback()
+        self.model.learn(n_iter, callback=reward_callback)
+        self.episodes.extend(reward_callback.episodes)
+        self.nr_iterations += n_iter
+        self.env = env
+        self.info["nr_retrained"] = self.info.get("retrained", 0) + 1
+        self.save()
+        return self
+
     def get_policy(self):
         if self.policy is None:
             self.policy = {state:  ACTIONS[self.model.predict(state_ix, deterministic=True)[
