@@ -52,7 +52,7 @@ def update_factored_counts(episode, hr_counts, bp_counts, o2_counts, glu_counts)
     return (hr_counts, bp_counts, o2_counts, glu_counts)
 
 
-def transition_model(hr_counts=init_hr_counts(), bp_counts=init_bp_counts(), o2_counts=init_o2_counts(), glu_counts=init_glu_counts()):
+def transition_model_factored(hr_counts=init_hr_counts(), bp_counts=init_bp_counts(), o2_counts=init_o2_counts(), glu_counts=init_glu_counts()):
     model = np.zeros((n_states, n_actions, n_states))
     for i, state in enumerate(STATES):
         for j, action in enumerate(ACTIONS):

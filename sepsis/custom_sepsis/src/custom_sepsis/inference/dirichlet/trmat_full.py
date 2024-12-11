@@ -14,7 +14,7 @@ def update_full_counts(episode, state_counts=np.ones((n_states, n_actions, n_sta
     return state_counts
 
 
-def transition_model(dirichlet_counts=np.ones((n_states, n_actions, n_states))):
+def transition_model_full(dirichlet_counts=np.ones((n_states, n_actions, n_states))):
     model = np.zeros((n_states, n_actions, n_states))
     for i in range(n_states):
         for j in range(n_actions):
