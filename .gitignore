@@ -3,3 +3,5 @@ dtr-bench/dirichlet/__pycache__/
 dtr-bench/dirichlet/data/
 dtr-bench/custom_dtr/__pycache__/
 *.pyc
+*.pyo
+__pycache__/
