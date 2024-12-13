@@ -1,7 +1,27 @@
-.DS_Store
-dtr-bench/dirichlet/__pycache__/
-dtr-bench/dirichlet/data/
-dtr-bench/custom_dtr/__pycache__/
-*.pyc
-*.pyo
+# Ignore __pycache__ and Python bytecode files
 __pycache__/
+*.py[cod]
+*.so
+
+# Ignore data files
+dtr-bench/dirichlet/data/
+sepsis/custom_sepsis/src/custom_sepsis/data/
+
+# Ignore MacOS system files
+.DS_Store
+
+# Setuptools / Python egg files
+*.egg
+*.egg-info/
+dist/
+build/
+*.egg-info/
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Test output files
+coverage/
+.tox/
+.nox/
+*.cover
+*.py,cover

@@ -51,6 +51,21 @@ def plot_rewards(evaluations: List[Evaluation], episode_range: int, window_size:
     plt.show()
 
 
+def plot_mean_rewards(evaluations: List[Evaluation], episode_range: int, nr_eval_episodes: int):
+    plt.figure(figsize=(10, 6))
+
+    for evaluation in evaluations:
+        mean_rewards = [evaluate_policy(ep.policy, nr_eval_episodes)
+                        for ep in evaluation.episodes[1:episode_range]]
+        plt.plot(mean_rewards, label=evaluation.info["name"])
+
+    plt.xlabel(f"Policies")
+    plt.ylabel(f"Mean reward across {nr_eval_episodes} episodes")
+    plt.title("Mean Reward")
+    plt.legend()  # Add a legend to distinguish evaluations
+    plt.show()
+
+
 def plot_cumulative_rewards(evaluations: List[Evaluation], episode_range: int):
     plt.figure(figsize=(10, 6))
 

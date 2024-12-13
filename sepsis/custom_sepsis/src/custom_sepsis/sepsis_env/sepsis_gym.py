@@ -159,23 +159,26 @@ class SepsisEnv(gym.Env):
         # state is the index of the state
         self.state = state_to_index[random_initial_state()]
         self.step_count = 0
+        self.done = False
 
     def reset(self, **kwargs):
         # Reset to initial state
         self.state = state_to_index[random_initial_state()]
         self.step_count = 0
+        self.done = False
         return self.state, {}  # Return initial observation and empty info dic
 
     def step(self, action: int):
         action = ACTIONS[action]
         state = STATES[self.state]
-        next_state = get_next_state(self.parameters, state, action)
+        next_state = state if self.done else get_next_state(
+            self.parameters, state, action)
         ix = state_to_index[next_state]
-        reward = get_reward(next_state)
+        reward = 0 if self.done else get_reward(next_state)
         self.state = ix
         self.step_count += 1
-        done = (reward != 0 or self.step_count >= self.max_episode_length)
-        return self.state, reward, done, False, {"step_count": self.step_count, "previous": state, "action": action, "next_state": next_state}
+        self.done = reward != 0 or (self.step_count >= self.max_episode_length)
+        return self.state, reward, self.done, False, {"step_count": self.step_count, "previous": state, "action": action, "next_state": next_state}
 
 
 true_env = SepsisEnv(TRUE_ENV_PARAMS)
