@@ -57,16 +57,21 @@ class DirThompsonSampling():
     def save(self, directory="data/dir_ts"):
         os.makedirs(directory, exist_ok=True)
         object_path = os.path.join(
-            directory, f"{self.name}.pkl"
+            directory, f"{self.name}.pkl.gz"
         )
 
-        with open(object_path, 'wb') as file:
+        with gzip.open(object_path, 'wb') as file:
             pickle.dump(self, file)
 
         return object_path
 
     @staticmethod
     def load(object_path: str):
+        with gzip.open("data.pkl.gz", "rb") as f:
+            data = pickle.load(f)
+
+    @staticmethod
+    def load_pickle(object_path: str):
         with open(object_path, 'rb') as file:
             return pickle.load(file)
 
