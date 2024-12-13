@@ -67,8 +67,8 @@ class DirThompsonSampling():
 
     @staticmethod
     def load(object_path: str):
-        with gzip.open("data.pkl.gz", "rb") as f:
-            data = pickle.load(f)
+        with gzip.open(object_path, "rb") as f:
+            return pickle.load(f)
 
     @staticmethod
     def load_pickle(object_path: str):
