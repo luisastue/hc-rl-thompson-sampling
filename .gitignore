@@ -6,6 +6,7 @@ __pycache__/
 # Ignore data files
 dtr-bench/dirichlet/data/
 sepsis/custom_sepsis/src/custom_sepsis/data/
+sepsis/dtr_bench_dirichlet/data
 
 # Ignore MacOS system files
 .DS_Store
@@ -15,7 +16,7 @@ sepsis/custom_sepsis/src/custom_sepsis/data/
 *.egg-info/
 dist/
 build/
-*.egg-info/
+
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints/
 
