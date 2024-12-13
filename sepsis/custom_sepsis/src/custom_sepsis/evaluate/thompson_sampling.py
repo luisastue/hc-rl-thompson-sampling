@@ -7,6 +7,7 @@ from typing import List
 import matplotlib.pyplot as plt
 from .evaluate import Evaluation, evaluate_policy
 from custom_sepsis import Episode, Policy
+import gzip
 
 
 class ThompsonSampling(Evaluation):
@@ -17,16 +18,21 @@ class ThompsonSampling(Evaluation):
     def save(self, directory="data/thompson_sampling"):
         os.makedirs(directory, exist_ok=True)
         object_path = os.path.join(
-            directory, f"{self.name}.pkl"
+            directory, f"{self.name}.pkl.gz"
         )
 
-        with open(object_path, 'wb') as file:
+        with gzip.open(object_path, 'wb') as file:
             pickle.dump(self, file)
 
         return object_path
 
     @staticmethod
     def load(object_path: str):
+        with gzip.open("data.pkl.gz", "rb") as f:
+            data = pickle.load(f)
+
+    @staticmethod
+    def load_pickle(object_path: str):
         with open(object_path, 'rb') as file:
             return pickle.load(file)
 
