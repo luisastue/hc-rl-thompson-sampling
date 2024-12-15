@@ -84,3 +84,28 @@ action_to_index = {action: i for i, action in enumerate(ACTIONS)}
 
 def random_policy():
     return {state: random.choice(ACTIONS) for state in STATES}
+
+
+def compress_array(arr):
+    # Get the indices where values are not 1
+    non_one_indices = np.where(arr != 1)
+    # Get the corresponding values at those indices
+    non_one_values = arr[non_one_indices]
+    # Return as a tuple of indices and values
+    return non_one_indices, non_one_values
+
+
+def decompress_array(non_one_indices, non_one_values, original_shape):
+    # Create a new array filled with 1s
+    decompressed_array = np.ones(original_shape, dtype=non_one_values.dtype)
+    # Set the non-one values back to their positions
+    decompressed_array[non_one_indices] = non_one_values
+    return decompressed_array
+
+
+def compress_policy(policy: Policy):
+    return [action_to_index[policy[state]] for state in STATES]
+
+
+def decompress_policy(compressed_policy):
+    return {STATES[i]: ACTIONS[action] for i, action in enumerate(compressed_policy)}

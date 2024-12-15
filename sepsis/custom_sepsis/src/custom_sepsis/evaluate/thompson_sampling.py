@@ -1,4 +1,4 @@
-from ..inference import Policy, DirModel, FullModel, n_states, n_actions
+from ..inference import Policy, DirModel, FullModel, compress_array, decompress_array, n_states, n_actions, compress_policy, decompress_policy
 import os
 import dill as pickle
 import stable_baselines3 as sb3
@@ -8,23 +8,6 @@ import matplotlib.pyplot as plt
 from .evaluate import Evaluation, evaluate_policy
 from custom_sepsis import Episode, Policy
 import gzip
-
-
-def compress_array(arr):
-    # Get the indices where values are not 1
-    non_one_indices = np.where(arr != 1)
-    # Get the corresponding values at those indices
-    non_one_values = arr[non_one_indices]
-    # Return as a tuple of indices and values
-    return non_one_indices, non_one_values
-
-
-def decompress_array(non_one_indices, non_one_values, original_shape):
-    # Create a new array filled with 1s
-    decompressed_array = np.ones(original_shape, dtype=non_one_values.dtype)
-    # Set the non-one values back to their positions
-    decompressed_array[non_one_indices] = non_one_values
-    return decompressed_array
 
 
 class ThompsonSampling(Evaluation):
@@ -66,7 +49,8 @@ class DirThompsonSampling():
         self.info["name"] = name
         self.info["date"] = str(np.datetime64('now'))
         self.model = model
-        self.policies = policies
+        self.policies = {i: compress_policy(policy) for i,
+                         policy in policies.items()}
         self.state_counts = state_counts
         self.mean_rewards = {}
         self.rewards = rewards
@@ -92,20 +76,20 @@ class DirThompsonSampling():
         with open(object_path, 'rb') as file:
             return pickle.load(file)
 
-    def get_policy(self):
-        if self.policy is None:
-            self.policy = self.policies[list(self.policies.keys())[-1]]
-        return self.policy
-
     def get_mean_rewards(self, nr_eval_episodes: int):
-        if nr_eval_episodes not in self.mean_rewards or len(self.mean_rewards[nr_eval_episodes]) != len(list(self.policies.keys())):
-            self.mean_rewards[nr_eval_episodes] = [evaluate_policy(policy, nr_eval_episodes)
+        if nr_eval_episodes not in self.mean_rewards:
+            self.mean_rewards[nr_eval_episodes] = [evaluate_policy(decompress_policy(policy), nr_eval_episodes)
                                                    for policy in list(self.policies.values())]
+        if len(self.mean_rewards[nr_eval_episodes]) != len(list(self.policies.keys())):
+            start = len(self.mean_rewards[nr_eval_episodes])
+            self.mean_rewards[nr_eval_episodes].extend([evaluate_policy(decompress_policy(policy), nr_eval_episodes)
+                                                        for policy in list(self.policies.values())[start:]])
+
         return self.mean_rewards[nr_eval_episodes]
 
     def add_data(self, index: int, rewards: dict[int, float], policy: Policy, state_counts: tuple[list]):
         self.rewards.update(rewards)
-        self.policies[index] = policy
+        self.policies[index] = compress_policy(policy)
         self.state_counts[index] = state_counts
 
     def get_state_counts(self, index: int):
@@ -118,7 +102,7 @@ class FullThompsonSampling(DirThompsonSampling):
 
     def add_data(self, index: int, rewards: dict[int, float], policy: Policy, state_counts: list):
         self.rewards.update(rewards)
-        self.policies[index] = policy
+        self.policies[index] = compress_policy(policy)
         self.state_counts[index] = compress_array(state_counts)
 
     def get_state_counts(self, index: int):
