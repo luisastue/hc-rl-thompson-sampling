@@ -55,7 +55,8 @@ def sample_from_uniform():
     return [np.random.beta(1, 1) for _ in len(TRUE_ENV_PARAMS)]
 
 
-def get_next_state(env_params: EnvParameters, state: State, action: Action):
+def get_next_state(state: State, action: Action):
+    env_params = TRUE_ENV_PARAMS
     hr = state.hr
     bp = state.bp
     o2 = state.o2
@@ -147,9 +148,9 @@ def get_reward(state: State):
 
 
 class SepsisEnv(gym.Env):
-    def __init__(self, parameters: EnvParameters):
+    def __init__(self, get_next_state=get_next_state):
         super(SepsisEnv, self).__init__()
-        self.parameters = parameters
+        self.get_next_state = get_next_state
         # hard coded because it needs to be the same for every env, otherwise there will be mismatches
         self.max_episode_length = 10
         self.n_states = len(STATES)
@@ -171,8 +172,7 @@ class SepsisEnv(gym.Env):
     def step(self, action: int):
         action = ACTIONS[action]
         state = STATES[self.state]
-        next_state = state if self.done else get_next_state(
-            self.parameters, state, action)
+        next_state = state if self.done else self.get_next_state(state, action)
         ix = state_to_index[next_state]
         reward = 0 if self.done else get_reward(next_state)
         self.state = ix
