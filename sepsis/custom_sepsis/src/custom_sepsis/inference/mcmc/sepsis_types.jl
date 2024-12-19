@@ -15,6 +15,11 @@ end
     SUPER_HIGH = 2
 end
 
+HR_LEVELS = [LOW, NORMAL, HIGH]
+BP_LEVELS = [LOW, NORMAL, HIGH]
+O2_LEVELS = [LOW, NORMAL]
+GLU_LEVELS = [SUPER_LOW, LOW, NORMAL, HIGH, SUPER_HIGH]
+
 struct State
     hr::Level
     bp::Level
@@ -27,11 +32,12 @@ struct State
 
     function State(hr::Level, bp::Level, o2::Level, glu::Level, diabetic::Bool, abx::Bool, vaso::Bool, vent::Bool)
         # Validate hr and bp (only LOW, NORMAL, HIGH are allowed)
-        @assert hr in (LOW, NORMAL, HIGH) "hr must be LOW, NORMAL, or HIGH"
-        @assert bp in (LOW, NORMAL, HIGH) "bp must be LOW, NORMAL, or HIGH"
+        @assert hr in HR_LEVELS "hr must be LOW, NORMAL, or HIGH"
+        @assert bp in BP_LEVELS "bp must be LOW, NORMAL, or HIGH"
 
         # Validate o2 (only LOW, NORMAL are allowed)
-        @assert o2 in (LOW, NORMAL) "o2 must be LOW or NORMAL"
+        @assert o2 in O2_LEVELS "o2 must be LOW or NORMAL"
+        @assert glu in GLU_LEVELS
 
         # No restrictions for glu; it can take any Level
         return new(hr, bp, o2, glu, diabetic, abx, vaso, vent)
@@ -55,30 +61,5 @@ function to_policy(policy::Dict{Any,Any})::Policy
 end
 
 const Policy = Dict{State,Action}
-
-struct EnvParameters
-    abx_on_hr_H_N::Float64
-    abx_on_bp_H_N::Float64
-    abx_withdrawn_hr_N_H::Float64
-    abx_withdrawn_bp_N_H::Float64
-    vent_on_o2_L_N::Float64
-    vent_withdrawn_o2_N_L::Float64
-    nond_vaso_on_bp_L_N::Float64
-    nond_vaso_on_bp_N_H::Float64
-    diab_vaso_on_bp_L_N::Float64
-    diab_vaso_on_bp_L_H::Float64
-    diab_vaso_on_bp_N_H::Float64
-    diab_vaso_on_glu_up::Float64
-    nond_vaso_withdrawn_bp_N_L::Float64
-    nond_vaso_withdrawn_bp_H_N::Float64
-    diab_vaso_withdrawn_bp_N_L::Float64
-    diab_vaso_withdrawn_bp_H_N::Float64
-    fluct::Float64
-    diab_fluct_glu::Float64
-end
-
-function get_env_params(p::EnvParameters)::Vector{Float64}
-    return [getfield(p, f) for f in fieldnames(EnvParameters)]
-end
 
 end
