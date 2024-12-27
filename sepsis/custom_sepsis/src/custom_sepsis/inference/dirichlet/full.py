@@ -33,3 +33,38 @@ class FullModel(DirModel):
 
     def get_state_counts(self):
         return self.state_counts.copy()
+
+    def to_dict(self):
+        return {
+            "type": Simplification.NONE.value,
+            "state_counts": self.to_dict_counts(self.state_counts)
+        }
+
+    def to_dict_counts(self, state_counts):
+        if "none_one_indices" in state_counts:
+            return state_counts
+
+        ind, val = compress_array(state_counts)
+        return {
+            "non_one_indices": [idx.tolist() for idx in ind],
+            "non_one_values": val.tolist(),
+        }
+
+    @staticmethod
+    def from_dict_counts(state_counts):
+        return state_counts
+
+    @staticmethod
+    def decompress_state_counts(state_counts):
+
+        non_one_indices = tuple(np.array(idx, dtype=int)
+                                for idx in state_counts["non_one_indices"])
+        non_one_values = np.array(state_counts["non_one_values"], dtype=int)
+
+        # Decompress the array
+        decompressed_array = decompress_array(
+            non_one_indices,
+            non_one_values,
+            (n_states, n_actions, n_states)
+        )
+        return decompressed_array

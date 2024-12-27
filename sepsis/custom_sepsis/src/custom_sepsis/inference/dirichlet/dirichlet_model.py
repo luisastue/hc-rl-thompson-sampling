@@ -29,3 +29,15 @@ class DirModel(ABC):
     @abstractmethod
     def get_state_counts(self):
         pass
+
+    @abstractmethod
+    def to_dict(self):
+        pass
+
+    @abstractmethod
+    def to_dict_counts(self, state_counts):
+        pass
+
+    @abstractmethod
+    def from_dict_counts(state_counts):
+        pass

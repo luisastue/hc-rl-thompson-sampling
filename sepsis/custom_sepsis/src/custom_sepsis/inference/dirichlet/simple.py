@@ -15,6 +15,25 @@ def init_hr_counts():
     }
 
 
+def hr_to_list(hr_counts):
+    return [hr_counts[(hr, action, hr_next)]
+            for hr in [Level.LOW.value, Level.NORMAL.value, Level.HIGH.value]
+            for action in ACTIONS
+            for hr_next in [Level.LOW.value, Level.NORMAL.value, Level.HIGH.value]
+            ]
+
+
+def list_to_hr(hr_list):
+    hr_counts = {}
+    i = 0
+    for hr in [Level.LOW.value, Level.NORMAL.value, Level.HIGH.value]:
+        for action in ACTIONS:
+            for hr_next in [Level.LOW.value, Level.NORMAL.value, Level.HIGH.value]:
+                hr_counts[(hr, action, hr_next)] = hr_list[i]
+                i += 1
+    return hr_counts
+
+
 def init_bp_counts():
     return {
         (bp, action, bp_next): 1
@@ -22,6 +41,25 @@ def init_bp_counts():
         for action in ACTIONS
         for bp_next in [Level.LOW.value, Level.NORMAL.value, Level.HIGH.value]
     }
+
+
+def bp_to_list(bp_counts):
+    return [bp_counts[(bp, action, bp_next)]
+            for bp in [Level.LOW.value, Level.NORMAL.value, Level.HIGH.value]
+            for action in ACTIONS
+            for bp_next in [Level.LOW.value, Level.NORMAL.value, Level.HIGH.value]
+            ]
+
+
+def list_to_bp(bp_list):
+    bp_counts = {}
+    i = 0
+    for bp in [Level.LOW.value, Level.NORMAL.value, Level.HIGH.value]:
+        for action in ACTIONS:
+            for bp_next in [Level.LOW.value, Level.NORMAL.value, Level.HIGH.value]:
+                bp_counts[(bp, action, bp_next)] = bp_list[i]
+                i += 1
+    return bp_counts
 
 
 def init_o2_counts():
@@ -33,6 +71,25 @@ def init_o2_counts():
     }
 
 
+def o2_to_list(o2_counts):
+    return [o2_counts[(o2, action, o2_next)]
+            for o2 in [Level.LOW.value, Level.NORMAL.value, Level.HIGH.value]
+            for action in ACTIONS
+            for o2_next in [Level.LOW.value, Level.NORMAL.value]
+            ]
+
+
+def list_to_o2(o2_list):
+    o2_counts = {}
+    i = 0
+    for o2 in [Level.LOW.value, Level.NORMAL.value, Level.HIGH.value]:
+        for action in ACTIONS:
+            for o2_next in [Level.LOW.value, Level.NORMAL.value]:
+                o2_counts[(o2, action, o2_next)] = o2_list[i]
+                i += 1
+    return o2_counts
+
+
 def init_glu_counts():
     return {
         (glu, action, glu_next): 1
@@ -40,6 +97,25 @@ def init_glu_counts():
         for action in ACTIONS
         for glu_next in [Level.SUPER_LOW.value, Level.LOW.value, Level.NORMAL.value, Level.HIGH.value, Level.SUPER_HIGH.value]
     }
+
+
+def glu_to_list(glu_counts):
+    return [glu_counts[(glu, action, glu_next)]
+            for glu in [Level.SUPER_LOW.value, Level.LOW.value, Level.NORMAL.value, Level.HIGH.value, Level.SUPER_HIGH.value]
+            for action in ACTIONS
+            for glu_next in [Level.SUPER_LOW.value, Level.LOW.value, Level.NORMAL.value, Level.HIGH.value, Level.SUPER_HIGH.value]
+            ]
+
+
+def list_to_glu(glu_list):
+    glu_counts = {}
+    i = 0
+    for glu in [Level.SUPER_LOW.value, Level.LOW.value, Level.NORMAL.value, Level.HIGH.value, Level.SUPER_HIGH.value]:
+        for action in ACTIONS:
+            for glu_next in [Level.SUPER_LOW.value, Level.LOW.value, Level.NORMAL.value, Level.HIGH.value, Level.SUPER_HIGH.value]:
+                glu_counts[(glu, action, glu_next)] = glu_list[i]
+                i += 1
+    return glu_counts
 
 
 class SimpleModel(DirModel):
@@ -124,3 +200,26 @@ class SimpleModel(DirModel):
 
     def get_state_counts(self):
         return tuple(en.copy() for en in self.state_counts)
+
+    def to_dict(self):
+        return {
+            "type": Simplification.SIMPLE.value,
+            "state_counts": self.to_dict_counts(self.state_counts)
+        }
+
+    def to_dict_counts(self, state_counts):
+        hr_counts, bp_counts, o2_counts, glu_counts = state_counts
+        return {
+            "hr_counts": hr_to_list(hr_counts),
+            "bp_counts": bp_to_list(bp_counts),
+            "o2_counts": o2_to_list(o2_counts),
+            "glu_counts": glu_to_list(glu_counts)
+        }
+
+    @staticmethod
+    def from_dict_counts(state_counts):
+        hr_counts = list_to_hr(state_counts["hr_counts"])
+        bp_counts = list_to_bp(state_counts["bp_counts"])
+        o2_counts = list_to_o2(state_counts["o2_counts"])
+        glu_counts = list_to_glu(state_counts["glu_counts"])
+        return hr_counts, bp_counts, o2_counts, glu_counts

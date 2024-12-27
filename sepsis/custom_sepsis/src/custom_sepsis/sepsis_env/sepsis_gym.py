@@ -197,3 +197,8 @@ def run_episode(policy: Policy):
         rewards.append(reward)
 
     return Episode(policy, rewards, visited)
+
+
+def evaluate_policy(policy: Policy, n_episodes: int):
+    test_eps = [run_episode(policy) for _ in range(n_episodes)]
+    return np.mean([np.sum(ep.rewards) for ep in test_eps])
