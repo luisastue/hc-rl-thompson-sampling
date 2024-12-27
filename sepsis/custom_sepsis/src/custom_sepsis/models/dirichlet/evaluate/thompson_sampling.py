@@ -2,7 +2,7 @@ from ..model import DirModel, FullModel, Simplification, MediumModel, SimpleMode
 import os
 import numpy as np
 import json
-from ....sepsis_env.sepsis_types import Policy, evaluate_policy,  compress_policy, decompress_policy
+from ....sepsis_env import Policy, evaluate_policy,  compress_policy, decompress_policy
 
 
 class DirThompsonSampling():

@@ -1,7 +1,7 @@
 
 
 module Softmax
-export softmax_functions, extract_parameters
+export softmax_functions, drift_update_softmax
 
 using Gen
 using ..SepsisTypes
@@ -11,7 +11,10 @@ using LinearAlgebra
 softmax(vector) = exp.(vector) / sum(exp.(vector))
 add_0(vector) = [vector; 0]
 
-function hr_probs(parameters::Parameters, state::State, action::Action)
+const Params = Dict{Tuple{Symbol,Level,Symbol},Float64}
+
+
+function hr_probs(parameters::Params, state::State, action::Action)
     hr_probs = softmax(add_0(
         parameters[(:hr, state.hr, :intercept)]
         .+
@@ -22,7 +25,7 @@ function hr_probs(parameters::Parameters, state::State, action::Action)
     return hr_probs
 end
 
-function bp_probs(parameters::Parameters, state::State, action::Action)
+function bp_probs(parameters::Params, state::State, action::Action)
     bp_probs = softmax(add_0(
         parameters[(:bp, state.bp, :intercept)]
         .+
@@ -33,7 +36,7 @@ function bp_probs(parameters::Parameters, state::State, action::Action)
     return bp_probs
 end
 
-function o2_probs(parameters::Parameters, state::State, action::Action)
+function o2_probs(parameters::Params, state::State, action::Action)
     o2_probs = softmax(add_0(
         parameters[(:o2, state.o2, :intercept)]
         .+
@@ -42,7 +45,7 @@ function o2_probs(parameters::Parameters, state::State, action::Action)
     return o2_probs
 end
 
-function glu_probs(parameters::Parameters, state::State, action::Action)
+function glu_probs(parameters::Params, state::State, action::Action)
     glu_probs = softmax(add_0(
         parameters[(:glu, state.glu, :intercept)]
         .+
@@ -51,9 +54,9 @@ function glu_probs(parameters::Parameters, state::State, action::Action)
     return glu_probs
 end
 
-@gen function get_parameters()::Parameters
+@gen function get_parameters()::Params
 
-    parameters = Parameters()
+    parameters = Params()
 
     for level in HR_LEVELS
         parameters[(:hr, level, :intercept)] =
@@ -90,32 +93,82 @@ end
     return parameters
 end
 
-function extract_parameters(trace)::Parameters
-    parameters = Dict()
+
+function block_update(trace)
+    acceptance = 0
+
     for hr in HR_LEVELS
-        parameters[(:hr, hr, :intercept)] = trace[:parameters=>:hr=>hr=>:intercept]
-        parameters[(:hr, hr, :abx)] = trace[:parameters=>:hr=>hr=>:abx]
-        parameters[(:hr, hr, :vaso)] = trace[:parameters=>:hr=>hr=>:vaso]
+        (trace, a1) = mh(trace, select(:parameters => :hr => hr => :intercept))
+        (trace, a2) = mh(trace, select(:parameters => :hr => hr => :abx))
+        (trace, a3) = mh(trace, select(:parameters => :hr => hr => :vaso))
+        acceptance += Int(a1) + Int(a2) + Int(a3)
     end
 
     for bp in BP_LEVELS
-        parameters[(:bp, bp, :intercept)] = trace[:parameters=>:bp=>bp=>:intercept]
-        parameters[(:bp, bp, :abx)] = trace[:parameters=>:bp=>bp=>:abx]
-        parameters[(:bp, bp, :vaso)] = trace[:parameters=>:bp=>bp=>:vaso]
+        (trace, a1) = mh(trace, select(:parameters => :bp => bp => :intercept))
+        (trace, a2) = mh(trace, select(:parameters => :bp => bp => :abx))
+        (trace, a3) = mh(trace, select(:parameters => :bp => bp => :vaso))
+        acceptance += Int(a1) + Int(a2) + Int(a3)
     end
 
     for o2 in O2_LEVELS
-        parameters[(:o2, o2, :intercept)] = trace[:parameters=>:o2=>o2=>:intercept]
-        parameters[(:o2, o2, :vent)] = trace[:parameters=>:o2=>o2=>:vent]
+        (trace, a1) = mh(trace, select(:parameters => :o2 => o2 => :intercept))
+        (trace, a2) = mh(trace, select(:parameters => :o2 => o2 => :vent))
+        acceptance += Int(a1) + Int(a2)
     end
 
     for glu in GLU_LEVELS
-        parameters[(:glu, glu, :intercept)] = trace[:parameters=>:glu=>glu=>:intercept]
-        parameters[(:glu, glu, :vaso)] = trace[:parameters=>:glu=>glu=>:vaso]
+        (trace, a1) = mh(trace, select(:parameters => :glu => glu => :intercept))
+        (trace, a2) = mh(trace, select(:parameters => :glu => glu => :vaso))
+        acceptance += Int(a1) + Int(a2)
     end
 
-    return parameters
+    acceptance /= (3 * length(HR_LEVELS) + 3 * length(BP_LEVELS) + 2 * length(O2_LEVELS) + 2 * length(GLU_LEVELS))
+
+    return trace, acceptance
 end
+
+@gen function drift_proposal(trace, step_size, parameter_name)
+    current_value = trace[parameter_name]
+    {parameter_name} ~ mvnormal(current_value, Diagonal([step_size for _ in current_value]))
+    return trace
+end
+
+function drift_update_softmax(trace, step_size)
+    acceptance = 0
+
+    for hr in HR_LEVELS
+        (trace, a1) = mh(trace, drift_proposal, (step_size, :parameters => :hr => hr => :intercept))
+        (trace, a2) = mh(trace, drift_proposal, (step_size, :parameters => :hr => hr => :abx))
+        (trace, a3) = mh(trace, drift_proposal, (step_size, :parameters => :hr => hr => :vaso))
+        acceptance += Int(a1) + Int(a2) + Int(a3)
+    end
+
+    for bp in BP_LEVELS
+        (trace, a1) = mh(trace, drift_proposal, (step_size, :parameters => :bp => bp => :intercept))
+        (trace, a2) = mh(trace, drift_proposal, (step_size, :parameters => :bp => bp => :abx))
+        (trace, a3) = mh(trace, drift_proposal, (step_size, :parameters => :bp => bp => :vaso))
+        acceptance += Int(a1) + Int(a2) + Int(a3)
+    end
+
+    for o2 in O2_LEVELS
+        (trace, a1) = mh(trace, drift_proposal, (step_size, :parameters => :o2 => o2 => :intercept))
+        (trace, a2) = mh(trace, drift_proposal, (step_size, :parameters => :o2 => o2 => :vent))
+        acceptance += Int(a1) + Int(a2)
+    end
+
+    for glu in GLU_LEVELS
+        (trace, a1) = mh(trace, drift_proposal, (step_size, :parameters => :glu => glu => :intercept))
+        (trace, a2) = mh(trace, drift_proposal, (step_size, :parameters => :glu => glu => :vaso))
+        acceptance += Int(a1) + Int(a2)
+    end
+
+
+    acceptance /= (3 * length(HR_LEVELS) + 3 * length(BP_LEVELS) + 2 * length(O2_LEVELS) + 2 * length(GLU_LEVELS))
+    return trace, acceptance
+end
+
+
 
 const softmax_functions = SepsisParams(
     get_parameters,
@@ -123,7 +176,7 @@ const softmax_functions = SepsisParams(
     bp_probs,
     o2_probs,
     glu_probs,
-    extract_parameters,
 )
+
 
 end

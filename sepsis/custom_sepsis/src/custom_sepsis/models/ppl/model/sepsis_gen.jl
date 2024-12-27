@@ -40,7 +40,7 @@ function random_initial_state()::State
 end
 
 
-@gen function get_next_state(params::Parameters, state::State, action::Action, functions::SepsisParams)::State
+@gen function get_next_state(params::Dict, state::State, action::Action, functions::SepsisParams)::State
     hr ~ labeled_categorical(HR_LEVELS, functions.hr_probs(params, state, action))
     bp ~ labeled_categorical(BP_LEVELS, functions.bp_probs(params, state, action))
     o2 ~ labeled_categorical(O2_LEVELS, functions.o2_probs(params, state, action))
@@ -49,7 +49,7 @@ end
     return next_state
 end
 
-@gen function simulate_episode(beliefs::Parameters, policy::Policy, start_state::State, functions::SepsisParams)
+@gen function simulate_episode(beliefs::Dict, policy::Policy, start_state::State, functions::SepsisParams)
     states = [start_state]
     state = start_state
     rewards = []

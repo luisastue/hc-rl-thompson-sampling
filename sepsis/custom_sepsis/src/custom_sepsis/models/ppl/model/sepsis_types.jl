@@ -1,5 +1,5 @@
 module SepsisTypes
-export Action, Level, SUPER_LOW, LOW, NORMAL, HIGH, SUPER_HIGH, State, Policy, Parameters, get_env_params, STATES, ACTIONS, to_state, to_action, to_policy, HR_LEVELS, BP_LEVELS, O2_LEVELS, GLU_LEVELS, SepsisParams, Policy, to_gym_pol
+export Action, Level, SUPER_LOW, LOW, NORMAL, HIGH, SUPER_HIGH, State, Policy, get_env_params, STATES, ACTIONS, to_state, to_action, to_policy, HR_LEVELS, BP_LEVELS, O2_LEVELS, GLU_LEVELS, SepsisParams, Policy, to_gym_pol
 
 struct Action
     abx::Bool
@@ -76,10 +76,6 @@ struct SepsisParams
     bp_probs::Function
     o2_probs::Function
     glu_probs::Function
-    extract_parameters::Function
 end
-
-
-const Parameters = Dict{Tuple,Vector{Float64}}
 
 end

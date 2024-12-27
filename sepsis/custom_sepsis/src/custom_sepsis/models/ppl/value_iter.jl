@@ -19,7 +19,7 @@ STATES (Vector): List of states.
 ACTIONS (Vector): List of actions.
 """
 
-function get_transition_matrix(parameters::Parameters, functions::SepsisParams)
+function get_transition_matrix(parameters::Dict, functions::SepsisParams)
     n_states = length(STATES)
     n_actions = length(ACTIONS)
     transition_matrix = zeros(n_states, n_actions, n_states)
@@ -104,7 +104,7 @@ function value_iteration(transition_model, prev_V=zeros(n_states), gamma=0.99, t
     return policy, V
 end
 
-function optimize(parameters::Parameters, functions::SepsisParams)
+function optimize(parameters::Dict, functions::SepsisParams)
     transition_model = get_transition_matrix(parameters, functions)
     policy, V = value_iteration(transition_model)
     return policy, V

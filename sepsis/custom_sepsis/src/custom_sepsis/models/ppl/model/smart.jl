@@ -9,7 +9,8 @@ using ..Sepsis
 using LinearAlgebra
 
 
-function hr_probs(parameters::Parameters, state::State, action::Action)
+
+function hr_probs(parameters::Dict, state::State, action::Action)
     if state.hr == LOW
         return [0.1, 0.9, 0]
     elseif state.hr == NORMAL
@@ -24,7 +25,7 @@ function hr_probs(parameters::Parameters, state::State, action::Action)
 end
 
 
-function bp_probs(parameters::Parameters, state::State, action::Action)
+function bp_probs(parameters::Dict, state::State, action::Action)
     if state.bp == LOW
         if action.vaso
             return [0.1, 0.9, 0]
@@ -46,7 +47,7 @@ function bp_probs(parameters::Parameters, state::State, action::Action)
     end
 end
 
-function o2_probs(parameters::Parameters, state::State, action::Action)
+function o2_probs(parameters::Dict, state::State, action::Action)
     if state.o2 == LOW
         if action.vent
             return [0.1, 0.9]
@@ -62,7 +63,7 @@ function o2_probs(parameters::Parameters, state::State, action::Action)
     end
 end
 
-function glu_probs(parameters::Parameters, state::State, action::Action)
+function glu_probs(parameters::Dict, state::State, action::Action)
     if state.glu == SUPER_LOW
         if action.vaso
             return [0.1, 0.9, 0, 0, 0]
@@ -96,13 +97,10 @@ function glu_probs(parameters::Parameters, state::State, action::Action)
     end
 end
 
-@gen function get_parameters()::Parameters
-    return Parameters()
+@gen function get_parameters()::Dict
+    return Dict()
 end
 
-function extract_parameters(trace)
-    return aprameters()
-end
 
 const smart_functions = SepsisParams(
     get_parameters,
@@ -110,7 +108,6 @@ const smart_functions = SepsisParams(
     bp_probs,
     o2_probs,
     glu_probs,
-    extract_parameters
 )
 
 end
