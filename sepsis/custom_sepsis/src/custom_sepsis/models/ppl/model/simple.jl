@@ -167,7 +167,7 @@ function glu_probs(parameters::Params, state::State, action::Action)
         elseif behavior == :vaso_withdrawn
             return [0.0, 0.0, vaso_withdrawal_effect, 1 - vaso_withdrawal_effect, 0.0]
         else
-            return [0.0, 0.0, glu_fluctuation, 1 - glu_fluctuation, glu_fluctuation]
+            return [0.0, 0.0, glu_fluctuation, 1 - 2 * glu_fluctuation, glu_fluctuation]
         end
     elseif state.glu == SUPER_HIGH
         if behavior == :vaso_withdrawn
@@ -212,26 +212,4 @@ const simple_functions = SepsisParams(
     glu_probs,
 )
 
-
-function block_update_simple(trace, step_size)
-    acceptance = 0
-    (trace, a1) = mh(trace, select(:parameters => :hr => :fluctuation))
-    (trace, a2) = mh(trace, select(:parameters => :hr => :abx_effect))
-    (trace, a3) = mh(trace, select(:parameters => :hr => :abx_withdrawal_effect))
-    (trace, a4) = mh(trace, select(:parameters => :bp => :fluctuation))
-    (trace, a5) = mh(trace, select(:parameters => :bp => :abx_effect))
-    (trace, a6) = mh(trace, select(:parameters => :bp => :abx_withdrawal_effect))
-    (trace, a7) = mh(trace, select(:parameters => :bp => :vaso_effect))
-    (trace, a8) = mh(trace, select(:parameters => :bp => :vaso_withdrawal_effect))
-    (trace, a9) = mh(trace, select(:parameters => :o2 => :fluctuation))
-    (trace, a10) = mh(trace, select(:parameters => :o2 => :vent_effect))
-    (trace, a11) = mh(trace, select(:parameters => :o2 => :vent_withdrawal_effect))
-    (trace, a12) = mh(trace, select(:parameters => :glu => :fluctuation))
-    (trace, a13) = mh(trace, select(:parameters => :glu => :vaso_effect))
-    (trace, a14) = mh(trace, select(:parameters => :glu => :vaso_withdrawal_effect))
-    acceptance += Int(a1) + Int(a2) + Int(a3) + Int(a4) + Int(a5) + Int(a6) + Int(a7) + Int(a8) + Int(a9) + Int(a10) + Int(a11) + Int(a12) + Int(a13) + Int(a14)
-    acceptance /= 14
-
-    return trace, acceptance
-end
 end

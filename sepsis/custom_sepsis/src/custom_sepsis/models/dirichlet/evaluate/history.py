@@ -4,6 +4,7 @@ import numpy as np
 from typing import List
 from ..model import DirModel, Simplification, FullModel, MediumModel, SimpleModel
 from ....sepsis_env.sepsis_types import Policy, compress_policy, decompress_policy
+import dill as pickle
 
 
 class DirHistory():
@@ -53,7 +54,7 @@ class DirHistory():
                         for k, v in json_file["policies"].items()}
             models = {k: model.from_dict_counts(v)
                       for k, v in json_file["models"].items()}
-            return DirHistory(model, policies, models, json_file["mean_rewards"], json_file["info"]["name"], json_file["info"])
+            return DirHistory(model, policies, models, {int(k): v for k, v in json_file["mean_rewards"].items()}, json_file["info"]["name"], json_file["info"])
 
     def add_point(self, index: int, policies: List[Policy], rewards: List[float], models: any):
         self.policies[index] = policies

@@ -4,29 +4,31 @@ export Checkpoint, PPHistoryRun, run_history_mcmc!
 using ..PPModel
 using ..SepsisTypes
 using ..Sepsis
+using ..Inference
 using ..ValueIteration
+using PyCall
+sepsis_gym = pyimport("custom_sepsis")
 
 using Dates
 using Gen
 
 struct Checkpoint
-    scores::Vector{Int}
+    scores::Vector
     acceptance::Float64
-    params::Dict
+    params::Vector
     sampled_params::Vector{Dict}
 end
 
 mutable struct PPHistoryRun
     name::String
     model::MCMCModel
-    mh_update::Any
     policies::Dict{Int,Vector{Policy}}
     models::Dict{Int,Checkpoint}
     mean_rewards::Dict{Int,Vector{Float64}}
     info::Dict
 
-    function PPHistoryRun(name::String, model::MCMCModel, mh_update::Any, info::Dict=Dict())
-        hist = new(name, model, mh_update, Dict(), Dict(), Dict(), info)
+    function PPHistoryRun(name::String, model::MCMCModel, info::Dict=Dict())
+        hist = new(name, model, Dict(), Dict(), Dict(), info)
         hist.info["name"] = hist.name
         hist.info["date"] = now()
         return hist
@@ -41,8 +43,8 @@ function run_history_mcmc!(history::PPHistoryRun, index::Int, steps::Int)
     acceptance = 0.0
 
     for _ in 1:steps
-        trace, a = history.mh_update(trace, 0.01)
-        push!(params, model.functions.extract_parameters(trace))
+        trace, a = get_update_function(history.model.type)(trace, 0.01)
+        push!(params, trace[:parameters])
         push!(scores, get_score(trace))
         acceptance += a
     end
@@ -58,7 +60,7 @@ function run_history_mcmc!(history::PPHistoryRun, index::Int, steps::Int)
         push!(sampled_params, param)
         policy, V = optimize(param, model.functions)
         pol = to_gym_pol(policy)
-        push!(policies, pol)
+        push!(policies, policy)
         r = sepsis_gym.evaluate_policy(pol, 100000)
         push!(mean_rew, r)
     end
@@ -66,7 +68,7 @@ function run_history_mcmc!(history::PPHistoryRun, index::Int, steps::Int)
 
     history.models[index] = checkpoint
     history.policies[index] = policies
-    history.mean_rewards[history.index] = mean_rew
+    history.mean_rewards[index] = mean_rew
 
     return history
 end
