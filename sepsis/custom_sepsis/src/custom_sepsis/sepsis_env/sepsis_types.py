@@ -61,6 +61,9 @@ STATES = [
     for vent in [True, False]
 ]
 
+n_states = len(STATES)
+n_actions = len(ACTIONS)
+
 Policy = dict[State, Action]
 
 

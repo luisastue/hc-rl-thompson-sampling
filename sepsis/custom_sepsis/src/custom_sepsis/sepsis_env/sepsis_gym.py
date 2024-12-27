@@ -134,7 +134,7 @@ def get_next_state(state: State, action: Action):
         # glucose is only affected by vasopressors
         glu = max(min(state.glu + np.random.choice([-1, 1]), 2), -2)
 
-    return State(hr, bp, o2, glu, state.diabetic, action.abx, action.vaso, action.vent)
+    return state_to_index[State(hr, bp, o2, glu, state.diabetic, action.abx, action.vaso, action.vent)]
 
 
 def get_reward(state: State):
@@ -150,11 +150,11 @@ def get_reward(state: State):
 class SepsisEnv(gym.Env):
     def __init__(self, get_next_state=get_next_state):
         super(SepsisEnv, self).__init__()
-        self.get_next_state = get_next_state
         # hard coded because it needs to be the same for every env, otherwise there will be mismatches
         self.max_episode_length = 10
-        self.n_states = len(STATES)
-        self.n_actions = len(ACTIONS)
+        self.get_next_state = get_next_state
+        self.n_states = n_states
+        self.n_actions = n_actions
         self.action_space = gym.spaces.Discrete(self.n_actions)
         self.observation_space = gym.spaces.Discrete(self.n_states)
         # state is the index of the state
@@ -172,16 +172,15 @@ class SepsisEnv(gym.Env):
     def step(self, action: int):
         action = ACTIONS[action]
         state = STATES[self.state]
-        next_state = state if self.done else self.get_next_state(state, action)
-        ix = state_to_index[next_state]
-        reward = 0 if self.done else get_reward(next_state)
+        ix = state if self.done else self.get_next_state(state, action)
+        reward = 0 if self.done else get_reward(STATES[ix])
         self.state = ix
         self.step_count += 1
         self.done = reward != 0 or (self.step_count >= self.max_episode_length)
-        return self.state, reward, self.done, False, {"step_count": self.step_count, "previous": state, "action": action, "next_state": next_state}
+        return self.state, reward, self.done, False, {"step_count": self.step_count, "previous": state, "action": action, "next_state": STATES[ix]}
 
 
-true_env = SepsisEnv(TRUE_ENV_PARAMS)
+true_env = SepsisEnv()
 
 
 def run_episode(policy: Policy):

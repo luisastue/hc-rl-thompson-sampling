@@ -7,7 +7,6 @@ setup(
     # Define "src" as the root directory for packages
     package_dir={"": "src"},
     install_requires=[            # Add dependencies if necessary
-        # Example dependency (use "gymnasium" instead of "gym" if you're using its newer version)
         "gymnasium",
     ],
 )
