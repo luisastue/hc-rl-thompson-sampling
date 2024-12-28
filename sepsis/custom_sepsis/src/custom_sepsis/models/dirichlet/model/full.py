@@ -38,7 +38,8 @@ class FullModel(DirModel):
         }
 
     def to_dict_counts(self, state_counts):
-        if "none_one_indices" in state_counts:
+        # print(state_counts)
+        if "non_one_indices" in state_counts:
             return state_counts
 
         ind, val = compress_array(state_counts)

@@ -8,7 +8,7 @@ import dill as pickle
 
 
 class DirThompsonSampling():
-    def __init__(self, model: DirModel, rewards: dict[int, float], models: dict[int, any], policies: dict[int, Policy], mean_rewards: dict[int, list[float]], name: str, info: dict):
+    def __init__(self, model: DirModel, rewards: dict[int, float], models: dict[int, any], policies: dict[int, Policy], mean_rewards: dict[int, float], name: str, info: dict):
         self.name = name
         self.info = info
         self.info["name"] = name
@@ -31,8 +31,8 @@ class DirThompsonSampling():
                 "model": self.model.to_dict(),
                 "policies": {k: compress_policy(p) for k, p in self.policies.items()},
                 "models": {k: self.model.to_dict_counts(v) for k, v in self.models.items()},
-                "mean_rewards": {k: v.tolist() for k, v in self.mean_rewards.items()},
-                "rewards": {k: rew.tolist() for k, rew in self.rewards.items()}
+                "mean_rewards": {k: v for k, v in self.mean_rewards.items()},
+                "rewards": {k: rew for k, rew in self.rewards.items()}
             }
             json.dump(json_file, file)
 
@@ -57,11 +57,13 @@ class DirThompsonSampling():
             elif json_file["model"]["type"] == Simplification.SIMPLE.value:
                 model = SimpleModel(
                     SimpleModel.from_dict_counts(json_file["model"]["state_counts"]))
-            policies = {k: decompress_policy(p)
+            policies = {int(k): decompress_policy(p)
                         for k, p in json_file["policies"].items()}
-            models = {k: model.from_dict_counts(v)
+            models = {int(k): model.from_dict_counts(v)
                       for k, v in json_file["models"].items()}
-            return DirThompsonSampling(model, json_file["rewards"], models, policies, json_file["mean_rewards"], json_file["info"]["name"], json_file["info"])
+            mean_rewards = {
+                int(k): v for k, v in json_file["mean_rewards"].items()}
+            return DirThompsonSampling(model, json_file["rewards"], models, policies, mean_rewards, json_file["info"]["name"], json_file["info"])
 
     def get_mean_rewards(self, nr_eval_episodes: int):
         if nr_eval_episodes not in self.mean_rewards:
