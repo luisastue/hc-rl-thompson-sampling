@@ -2,7 +2,8 @@ module Inference
 export get_update_function
 
 using Gen
-
+using LinearAlgebra
+using ..SepsisTypes
 
 function block_update_simple(trace, step_size)
     acceptance = 0

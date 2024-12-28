@@ -1,14 +1,17 @@
 module PPModel
-export MCMCModel, update_model!, update_choicemap!
+export MCMCModel, update_model!, update_choicemap!, get_functions
 
 using ..SepsisTypes
+using ..Sepsis
+using ..Simple
+using ..Softmax
+using ..Smart
 using PyCall
 sepsis_gym = pyimport("custom_sepsis")
 using Gen
 
 mutable struct MCMCModel
     type::Symbol
-    functions::SepsisParams
     choices::ChoiceMap
     policies::Vector{Policy}
     start_states::Vector{State}
@@ -37,9 +40,27 @@ function update_model!(model::MCMCModel, until::Int, policy::Union{Policy,Nothin
             policy = to_policy(pol)
         end
         episode = sepsis_gym.run_episode(pol)
-        model.choices = update_choicemap!(model.choices, i, episode)
+        choices = get_selected(model.choices, select(:episodes)) # copy
+        choices = update_choicemap!(choices, i, episode)
+        start_state = to_state(episode.visited[1])
+        trace, sc = generate(sepsis_model, ([policy], [start_state], get_functions(model.type)), choices)
+        if sc > -Inf
+            model.choices = choices
+        else
+            println(i, " Score was -Inf. Not updating choices")
+        end
         push!(model.policies, policy)
-        push!(model.start_states, to_state(episode.visited[1]))
+        push!(model.start_states, start_state)
+    end
+end
+
+function get_functions(type::Symbol)
+    if type == :simple
+        return simple_functions
+    elseif type == :softmax
+        return softmax_functions
+    elseif type == :smart
+        return smart_functions
     end
 end
 

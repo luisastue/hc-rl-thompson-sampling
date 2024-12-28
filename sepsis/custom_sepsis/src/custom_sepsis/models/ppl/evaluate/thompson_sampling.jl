@@ -22,13 +22,12 @@ mutable struct PPTSRun
     name::String
     model::MCMCModel
     policies::Dict{Int,Policy}
-    models::Dict{Int,Checkpoint}
-    rewards::Vector{Float}
-    mean_rewards::Dict{Int,Vector{Float64}}
+    models::Dict{Int,TSCheckpoint}
+    mean_rewards::Dict{Int,Float64}
     info::Dict
 
     function PPTSRun(name::String, model::MCMCModel, info::Dict=Dict())
-        hist = new(name, model, Dict(), Dict(), [], Dict(), info)
+        hist = new(name, model, Dict(), Dict(), Dict(), info)
         hist.info["name"] = hist.name
         hist.info["date"] = now()
         return hist
@@ -37,7 +36,8 @@ end
 
 function run_ts_mcmc!(ts::PPTSRun, index::Int, steps::Int)
     model = ts.model
-    trace, _ = generate(sepsis_model, (model.policies, model.start_states, model.functions), model.choices)
+    functions = get_functions(ts.model.type)
+    trace, _ = generate(sepsis_model, (model.policies, model.start_states, functions), model.choices)
     params = [trace[:parameters]]
     scores = [get_score(trace)]
     acceptance = 0.0
@@ -52,11 +52,11 @@ function run_ts_mcmc!(ts::PPTSRun, index::Int, steps::Int)
 
     param = params[end]
 
-    policy, V = optimize(param, model.functions)
-    mean_rew = evaluate_policy(to_gym_pol(policy), model.start_states, model.functions, 50000)
+    policy, V = optimize(param, functions)
+    mean_rew = sepsis_gym.evaluate_policy(to_gym_pol(policy), 100000)
     ts.policies[index] = policy
 
-    checkpoint = Checkpoint(scores, acceptance, params)
+    checkpoint = TSCheckpoint(scores, acceptance, params)
 
     ts.models[index] = checkpoint
     ts.mean_rewards[index] = mean_rew

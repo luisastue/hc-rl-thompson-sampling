@@ -11,7 +11,7 @@ using LinearAlgebra
 softmax(vector) = exp.(vector) / sum(exp.(vector))
 add_0(vector) = [vector; 0]
 
-const Params = Dict{Tuple{Symbol,Level,Symbol},Float64}
+const Params = Dict{Tuple{Symbol,Level,Symbol},Vector{Float64}}
 
 
 function hr_probs(parameters::Params, state::State, action::Action)

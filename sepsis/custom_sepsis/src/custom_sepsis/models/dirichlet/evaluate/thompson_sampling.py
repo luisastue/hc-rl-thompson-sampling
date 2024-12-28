@@ -3,6 +3,8 @@ import os
 import numpy as np
 import json
 from ....sepsis_env import Policy, evaluate_policy,  compress_policy, decompress_policy
+import gzip
+import dill as pickle
 
 
 class DirThompsonSampling():
@@ -29,12 +31,17 @@ class DirThompsonSampling():
                 "model": self.model.to_dict(),
                 "policies": {k: compress_policy(p) for k, p in self.policies.items()},
                 "models": {k: self.model.to_dict_counts(v) for k, v in self.models.items()},
-                "mean_rewards": self.mean_rewards,
+                "mean_rewards": {k: v.tolist() for k, v in self.mean_rewards.items()},
                 "rewards": {k: rew.tolist() for k, rew in self.rewards.items()}
             }
             json.dump(json_file, file)
 
         return object_path
+
+    @staticmethod
+    def load(object_path: str):
+        with gzip.open(object_path, "rb") as f:
+            return pickle.load(f)
 
     @staticmethod
     def load_json(object_path: str):
@@ -74,3 +81,16 @@ class DirThompsonSampling():
 
     def get_state_counts(self, index: int):
         return self.state_counts[index]
+
+
+class FullThompsonSampling(DirThompsonSampling):
+    def __init__(self, model: FullModel, rewards: dict[int, float], state_counts: dict[int, list], policies: dict[int, Policy], name: str, info: dict):
+        super().__init__(model, rewards, state_counts, policies, name, info)
+
+    def add_data(self, index: int, rewards: dict[int, float], policy: Policy, state_counts: list):
+        self.rewards.update(rewards)
+        self.policies[index] = compress_policy(policy)
+        self.state_counts[index] = compress_array(state_counts)
+
+    def get_state_counts(self, index: int):
+        return decompress_array(*self.state_counts[index], (n_states, n_actions, n_states))

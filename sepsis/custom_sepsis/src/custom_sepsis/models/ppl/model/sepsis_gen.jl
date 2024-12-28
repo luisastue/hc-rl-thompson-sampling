@@ -27,16 +27,21 @@ function get_reward(state::State)::Int
 end
 
 function random_initial_state()::State
-    return State(
-        Level(rand(-1:1)),
-        Level(rand(-1:1)),
-        Level(rand(-1:0)),
-        Level(rand(-2:2)),
-        rand(Bool),
-        false,
-        false,
-        false
-    )
+    reward = -1
+    while reward != 0
+        state = State(
+            Level(rand(-1:1)),
+            Level(rand(-1:1)),
+            Level(rand(-1:0)),
+            Level(rand(-2:2)),
+            rand(Bool),
+            false,
+            false,
+            false
+        )
+        reward = get_reward(state)
+    end
+    return state
 end
 
 

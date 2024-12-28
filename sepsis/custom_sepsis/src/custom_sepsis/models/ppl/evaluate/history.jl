@@ -37,7 +37,8 @@ end
 
 function run_history_mcmc!(history::PPHistoryRun, index::Int, steps::Int)
     model = history.model
-    trace, _ = generate(sepsis_model, (model.policies, model.start_states, model.functions), model.choices)
+    functions = get_functions(model.type)
+    trace, _ = generate(sepsis_model, (model.policies, model.start_states, functions), model.choices)
     params = [trace[:parameters]]
     scores = [get_score(trace)]
     acceptance = 0.0
@@ -58,7 +59,7 @@ function run_history_mcmc!(history::PPHistoryRun, index::Int, steps::Int)
     for i in 1:10
         param = rand(posterior)
         push!(sampled_params, param)
-        policy, V = optimize(param, model.functions)
+        policy, V = optimize(param, functions)
         pol = to_gym_pol(policy)
         push!(policies, policy)
         r = sepsis_gym.evaluate_policy(pol, 100000)
@@ -72,6 +73,5 @@ function run_history_mcmc!(history::PPHistoryRun, index::Int, steps::Int)
 
     return history
 end
-
 
 end
