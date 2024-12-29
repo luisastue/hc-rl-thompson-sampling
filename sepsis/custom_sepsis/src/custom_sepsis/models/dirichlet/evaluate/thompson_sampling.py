@@ -66,18 +66,14 @@ class DirThompsonSampling():
             return DirThompsonSampling(model, json_file["rewards"], models, policies, mean_rewards, json_file["info"]["name"], json_file["info"])
 
     def get_mean_rewards(self, nr_eval_episodes: int):
-        if nr_eval_episodes not in self.mean_rewards:
-            self.mean_rewards[nr_eval_episodes] = [evaluate_policy(policy, nr_eval_episodes)
-                                                   for policy in list(self.policies.values())]
-        if len(self.mean_rewards[nr_eval_episodes]) != len(list(self.policies.keys())):
-            start = len(self.mean_rewards[nr_eval_episodes])
-            self.mean_rewards[nr_eval_episodes].extend([evaluate_policy(policy, nr_eval_episodes)
-                                                        for policy in list(self.policies.values())[start:]])
+        for (key, policy) in self.policies.items():
+            if key not in self.mean_rewards:
+                self.mean_rewards[key] = evaluate_policy(
+                    policy, nr_eval_episodes)
+        return self.mean_rewards
 
-        return self.mean_rewards[nr_eval_episodes]
-
-    def add_data(self, index: int, rewards: dict[int, float], policy: Policy, state_counts: tuple[list]):
-        self.rewards.update(rewards)
+    def add_data(self, index: int, mean_rewards: dict[int, float], policy: Policy, state_counts: tuple[list], ):
+        self.mean_rewards.update(mean_rewards)
         self.policies[index] = compress_policy(policy)
         self.models[index] = state_counts
 
