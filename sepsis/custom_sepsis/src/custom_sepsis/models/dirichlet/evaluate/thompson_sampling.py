@@ -79,10 +79,10 @@ class DirThompsonSampling():
     def add_data(self, index: int, rewards: dict[int, float], policy: Policy, state_counts: tuple[list]):
         self.rewards.update(rewards)
         self.policies[index] = compress_policy(policy)
-        self.state_counts[index] = state_counts
+        self.models[index] = state_counts
 
     def get_state_counts(self, index: int):
-        return self.state_counts[index]
+        return self.models[index]
 
 
 class FullThompsonSampling(DirThompsonSampling):
@@ -92,7 +92,7 @@ class FullThompsonSampling(DirThompsonSampling):
     def add_data(self, index: int, rewards: dict[int, float], policy: Policy, state_counts: list):
         self.rewards.update(rewards)
         self.policies[index] = compress_policy(policy)
-        self.state_counts[index] = compress_array(state_counts)
+        self.models[index] = compress_array(state_counts)
 
     def get_state_counts(self, index: int):
-        return decompress_array(*self.state_counts[index], (n_states, n_actions, n_states))
+        return decompress_array(*self.models[index], (n_states, n_actions, n_states))

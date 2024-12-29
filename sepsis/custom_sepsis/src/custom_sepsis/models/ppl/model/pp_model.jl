@@ -40,26 +40,23 @@ function update_model!(model::MCMCModel, until::Int, policy::Union{Policy,Nothin
             policy = to_policy(pol)
         end
         episode = sepsis_gym.run_episode(pol)
-        choices = get_selected(model.choices, select(:episodes)) # copy
-        choices = update_choicemap!(choices, i, episode)
+        model.choices = update_choicemap!(model.choices, i, episode)
         start_state = to_state(episode.visited[1])
-        trace, sc = generate(sepsis_model, ([policy], [start_state], get_functions(model.type)), choices)
-        if sc > -Inf
-            model.choices = choices
-        else
-            println(i, " Score was -Inf. Not updating choices")
+        trace, sc = generate(sepsis_model, ([policy], [start_state], get_functions(model.type)), model.choices)
+        if sc == -Inf
+            println(i, " Score was -Inf.")
         end
         push!(model.policies, policy)
         push!(model.start_states, start_state)
     end
 end
 
-function get_functions(type::Symbol)
-    if type == :simple
+function get_functions(type::Symbol)::SepsisParams
+    if type == :SimplePPL
         return simple_functions
-    elseif type == :softmax
+    elseif type == :Softmax
         return softmax_functions
-    elseif type == :smart
+    elseif type == :Smart
         return smart_functions
     end
 end

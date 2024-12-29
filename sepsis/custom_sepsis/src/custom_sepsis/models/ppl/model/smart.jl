@@ -97,17 +97,18 @@ function glu_probs(parameters::Dict, state::State, action::Action)
     end
 end
 
-@gen function get_parameters()::Dict
-    return Dict()
+
+function dummy()
+    pass
 end
 
-
 const smart_functions = SepsisParams(
-    get_parameters,
+    dummy,
+    dummy,
     hr_probs,
     bp_probs,
     o2_probs,
     glu_probs,
-)
+    dummy)
 
 end

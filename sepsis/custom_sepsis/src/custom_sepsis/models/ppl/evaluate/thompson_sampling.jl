@@ -4,7 +4,6 @@ export Checkpoint, PPTSRun, run_ts_mcmc!
 using ..PPModel
 using ..SepsisTypes
 using ..Sepsis
-using ..Inference
 using ..ValueIteration
 using PyCall
 sepsis_gym = pyimport("custom_sepsis")
@@ -43,7 +42,7 @@ function run_ts_mcmc!(ts::PPTSRun, index::Int, steps::Int)
     acceptance = 0.0
 
     for _ in 1:steps
-        trace, a = get_update_function(ts.model.type)(trace, 0.01)
+        trace, a = functions.update(trace, 0.01)
         push!(params, trace[:parameters])
         push!(scores, get_score(trace))
         acceptance += a
@@ -51,6 +50,7 @@ function run_ts_mcmc!(ts::PPTSRun, index::Int, steps::Int)
     acceptance /= steps
 
     param = params[end]
+    ts.model.choices = functions.set_parameters(ts.model.choices, param)
 
     policy, V = optimize(param, functions)
     mean_rew = sepsis_gym.evaluate_policy(to_gym_pol(policy), 100000)

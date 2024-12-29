@@ -72,10 +72,12 @@ end
 
 struct SepsisParams
     get_parameters::Any
+    set_parameters::Function
     hr_probs::Function
     bp_probs::Function
     o2_probs::Function
     glu_probs::Function
+    update::Function
 end
 
 end

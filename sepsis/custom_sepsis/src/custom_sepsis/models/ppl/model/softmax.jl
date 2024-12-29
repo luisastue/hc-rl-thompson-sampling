@@ -93,14 +93,78 @@ end
     return parameters
 end
 
+function set_parameters(choices::ChoiceMap, parameters::Params)
+    for level in HR_LEVELS
+        choices[:parameters=>:hr=>level=>:intercept] = parameters[(:hr, level, :intercept)]
+        choices[:parameters=>:hr=>level=>:abx] = parameters[(:hr, level, :abx)]
+        choices[:parameters=>:hr=>level=>:vaso] = parameters[(:hr, level, :vaso)]
+    end
+    for level in BP_LEVELS
+        choices[:parameters=>:bp=>level=>:intercept] = parameters[(:bp, level, :intercept)]
+        choices[:parameters=>:bp=>level=>:abx] = parameters[(:bp, level, :abx)]
+        choices[:parameters=>:bp=>level=>:vaso] = parameters[(:bp, level, :vaso)]
+    end
+    for level in O2_LEVELS
+        choices[:parameters=>:o2=>level=>:intercept] = parameters[(:o2, level, :intercept)]
+        choices[:parameters=>:o2=>level=>:vent] = parameters[(:o2, level, :vent)]
+    end
+    for level in GLU_LEVELS
+        choices[:parameters=>:glu=>level=>:intercept] = parameters[(:glu, level, :intercept)]
+        choices[:parameters=>:glu=>level=>:vaso] = parameters[(:glu, level, :vaso)]
+    end
+    return choices
+end
+
+
+@gen function drift_proposal(trace, step_size, parameter_name)
+    current_value = trace[parameter_name]
+    {parameter_name} ~ mvnormal(current_value, Diagonal([step_size for _ in current_value]))
+    return trace
+end
+
+function drift_update(trace, step_size)
+    acceptance = 0
+
+    for hr in HR_LEVELS
+        (trace, a1) = mh(trace, drift_proposal, (step_size, :parameters => :hr => hr => :intercept))
+        (trace, a2) = mh(trace, drift_proposal, (step_size, :parameters => :hr => hr => :abx))
+        (trace, a3) = mh(trace, drift_proposal, (step_size, :parameters => :hr => hr => :vaso))
+        acceptance += Int(a1) + Int(a2) + Int(a3)
+    end
+
+    for bp in BP_LEVELS
+        (trace, a1) = mh(trace, drift_proposal, (step_size, :parameters => :bp => bp => :intercept))
+        (trace, a2) = mh(trace, drift_proposal, (step_size, :parameters => :bp => bp => :abx))
+        (trace, a3) = mh(trace, drift_proposal, (step_size, :parameters => :bp => bp => :vaso))
+        acceptance += Int(a1) + Int(a2) + Int(a3)
+    end
+
+    for o2 in O2_LEVELS
+        (trace, a1) = mh(trace, drift_proposal, (step_size, :parameters => :o2 => o2 => :intercept))
+        (trace, a2) = mh(trace, drift_proposal, (step_size, :parameters => :o2 => o2 => :vent))
+        acceptance += Int(a1) + Int(a2)
+    end
+
+    for glu in GLU_LEVELS
+        (trace, a1) = mh(trace, drift_proposal, (step_size, :parameters => :glu => glu => :intercept))
+        (trace, a2) = mh(trace, drift_proposal, (step_size, :parameters => :glu => glu => :vaso))
+        acceptance += Int(a1) + Int(a2)
+    end
+
+
+    acceptance /= (3 * length(HR_LEVELS) + 3 * length(BP_LEVELS) + 2 * length(O2_LEVELS) + 2 * length(GLU_LEVELS))
+    return trace, acceptance
+end
 
 
 const softmax_functions = SepsisParams(
     get_parameters,
+    set_parameters,
     hr_probs,
     bp_probs,
     o2_probs,
     glu_probs,
+    drift_update
 )
 
 

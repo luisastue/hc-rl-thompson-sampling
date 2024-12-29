@@ -4,7 +4,6 @@ export Checkpoint, PPHistoryRun, run_history_mcmc!
 using ..PPModel
 using ..SepsisTypes
 using ..Sepsis
-using ..Inference
 using ..ValueIteration
 using PyCall
 sepsis_gym = pyimport("custom_sepsis")
@@ -44,27 +43,27 @@ function run_history_mcmc!(history::PPHistoryRun, index::Int, steps::Int)
     acceptance = 0.0
 
     for _ in 1:steps
-        trace, a = get_update_function(history.model.type)(trace, 0.01)
+        trace, a = functions.update(trace, 0.01)
         push!(params, trace[:parameters])
         push!(scores, get_score(trace))
         acceptance += a
     end
     acceptance /= steps
 
-    posterior = params[end-100:end]
+    sampled_params = params[end-9:end]
 
     mean_rew = []
-    sampled_params = []
     policies = []
     for i in 1:10
-        param = rand(posterior)
-        push!(sampled_params, param)
+        param = sampled_params[i]
         policy, V = optimize(param, functions)
         pol = to_gym_pol(policy)
         push!(policies, policy)
         r = sepsis_gym.evaluate_policy(pol, 100000)
         push!(mean_rew, r)
     end
+    param = params[end]
+    history.model.choices = functions.set_parameters(history.model.choices, param)
     checkpoint = Checkpoint(scores, acceptance, params, sampled_params)
 
     history.models[index] = checkpoint
