@@ -104,9 +104,9 @@ function value_iteration(transition_model, prev_V=zeros(n_states), gamma=0.99, t
     return policy, V
 end
 
-function optimize(parameters::Dict, functions::SepsisParams)
+function optimize(parameters::Dict, functions::SepsisParams, prev_V=zeros(n_states))
     transition_model = get_transition_matrix(parameters, functions)
-    policy, V = value_iteration(transition_model)
+    policy, V = value_iteration(transition_model, prev_V)
     return policy, V
 end
 

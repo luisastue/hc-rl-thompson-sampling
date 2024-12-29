@@ -1,5 +1,5 @@
 module History
-export Checkpoint, PPHistoryRun, run_history_mcmc!
+export Checkpoint, PPHistoryRun, run_history_mcmc!, update_model_history!
 
 using ..PPModel
 using ..SepsisTypes
@@ -34,7 +34,21 @@ mutable struct PPHistoryRun
     end
 end
 
-function run_history_mcmc!(history::PPHistoryRun, index::Int, steps::Int)
+function update_model_history!(model::MCMCModel, episodes::Vector, policies::Vector{Policy})
+    for (i, episode) in enumerate(episodes)
+        policy = policies[i]
+        model.choices = update_choicemap!(model.choices, i, episode)
+        start_state = to_state(episode.visited[1])
+        trace, sc = generate(sepsis_model, ([policy], [start_state], get_functions(model.type)), model.choices)
+        if sc == -Inf
+            println(i, " Score was -Inf.")
+        end
+        push!(model.policies, policy)
+        push!(model.start_states, start_state)
+    end
+end
+
+function run_history_mcmc!(history::PPHistoryRun, index::Int, steps::Int, nr_samples::Int=10)
     model = history.model
     functions = get_functions(model.type)
     trace, _ = generate(sepsis_model, (model.policies, model.start_states, functions), model.choices)
@@ -50,20 +64,20 @@ function run_history_mcmc!(history::PPHistoryRun, index::Int, steps::Int)
     end
     acceptance /= steps
 
-    sampled_params = params[end-9:end]
+    posterior = params[80:end]
 
     mean_rew = []
     policies = []
-    for i in 1:10
-        param = sampled_params[i]
-        policy, V = optimize(param, functions)
+    sampled_params = []
+    for i in 1:nr_samples
+        param = random(posterior)
+        V = zeros(n_states)
+        policy, V = optimize(param, functions, V)
         pol = to_gym_pol(policy)
         push!(policies, policy)
         r = sepsis_gym.evaluate_policy(pol, 100000)
         push!(mean_rew, r)
     end
-    param = params[end]
-    history.model.choices = functions.set_parameters(history.model.choices, param)
     checkpoint = Checkpoint(scores, acceptance, params, sampled_params)
 
     history.models[index] = checkpoint

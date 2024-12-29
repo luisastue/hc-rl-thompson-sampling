@@ -1,5 +1,5 @@
 module PPModel
-export MCMCModel, update_model!, update_choicemap!, get_functions
+export MCMCModel, update_choicemap!, get_functions
 
 using ..SepsisTypes
 using ..Sepsis
@@ -30,26 +30,6 @@ function update_choicemap!(episodes::ChoiceMap, i::Int, episode::Any) #episode c
     return episodes
 end
 
-function update_model!(model::MCMCModel, until::Int, policy::Union{Policy,Nothing}=nothing)
-    for i in length(model.policies):until
-        pol = policy
-        if policy !== nothing
-            pol = to_gym_pol(policy)
-        else
-            pol = sepsis_gym.random_policy()
-            policy = to_policy(pol)
-        end
-        episode = sepsis_gym.run_episode(pol)
-        model.choices = update_choicemap!(model.choices, i, episode)
-        start_state = to_state(episode.visited[1])
-        trace, sc = generate(sepsis_model, ([policy], [start_state], get_functions(model.type)), model.choices)
-        if sc == -Inf
-            println(i, " Score was -Inf.")
-        end
-        push!(model.policies, policy)
-        push!(model.start_states, start_state)
-    end
-end
 
 function get_functions(type::Symbol)::SepsisParams
     if type == :SimplePPL

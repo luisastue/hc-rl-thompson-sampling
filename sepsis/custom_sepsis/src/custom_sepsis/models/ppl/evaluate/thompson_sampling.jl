@@ -1,5 +1,5 @@
 module ThompsonSampling
-export Checkpoint, PPTSRun, run_ts_mcmc!
+export Checkpoint, PPTSRun, run_ts_mcmc!, update_model!
 
 using ..PPModel
 using ..SepsisTypes
@@ -30,6 +30,27 @@ mutable struct PPTSRun
         hist.info["name"] = hist.name
         hist.info["date"] = now()
         return hist
+    end
+end
+
+function update_model!(model::MCMCModel, until::Int, policy::Policy)
+    for i in length(model.policies):until
+        pol = policy
+        if policy !== nothing
+            pol = to_gym_pol(policy)
+        else
+            pol = sepsis_gym.random_policy()
+            policy = to_policy(pol)
+        end
+        episode = sepsis_gym.run_episode(pol)
+        model.choices = update_choicemap!(model.choices, i, episode)
+        start_state = to_state(episode.visited[1])
+        trace, sc = generate(sepsis_model, ([policy], [start_state], get_functions(model.type)), model.choices)
+        if sc == -Inf
+            println(i, " Score was -Inf.")
+        end
+        push!(model.policies, policy)
+        push!(model.start_states, start_state)
     end
 end
 

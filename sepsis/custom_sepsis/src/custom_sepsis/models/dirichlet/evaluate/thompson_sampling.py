@@ -39,11 +39,6 @@ class DirThompsonSampling():
         return object_path
 
     @staticmethod
-    def load(object_path: str):
-        with gzip.open(object_path, "rb") as f:
-            return pickle.load(f)
-
-    @staticmethod
     def load_json(object_path: str):
         with open(object_path, 'r') as file:
             json_file = json.load(file)
@@ -79,16 +74,3 @@ class DirThompsonSampling():
 
     def get_state_counts(self, index: int):
         return self.models[index]
-
-
-class FullThompsonSampling(DirThompsonSampling):
-    def __init__(self, model: FullModel, rewards: dict[int, float], state_counts: dict[int, list], policies: dict[int, Policy], name: str, info: dict):
-        super().__init__(model, rewards, state_counts, policies, name, info)
-
-    def add_data(self, index: int, rewards: dict[int, float], policy: Policy, state_counts: list):
-        self.rewards.update(rewards)
-        self.policies[index] = compress_policy(policy)
-        self.models[index] = compress_array(state_counts)
-
-    def get_state_counts(self, index: int):
-        return decompress_array(*self.models[index], (n_states, n_actions, n_states))
