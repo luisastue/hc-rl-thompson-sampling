@@ -67,11 +67,11 @@ class DirThompsonSampling():
 
     def get_mean_rewards(self, nr_eval_episodes: int):
         if nr_eval_episodes not in self.mean_rewards:
-            self.mean_rewards[nr_eval_episodes] = [evaluate_policy(decompress_policy(policy), nr_eval_episodes)
+            self.mean_rewards[nr_eval_episodes] = [evaluate_policy(policy, nr_eval_episodes)
                                                    for policy in list(self.policies.values())]
         if len(self.mean_rewards[nr_eval_episodes]) != len(list(self.policies.keys())):
             start = len(self.mean_rewards[nr_eval_episodes])
-            self.mean_rewards[nr_eval_episodes].extend([evaluate_policy(decompress_policy(policy), nr_eval_episodes)
+            self.mean_rewards[nr_eval_episodes].extend([evaluate_policy(policy, nr_eval_episodes)
                                                         for policy in list(self.policies.values())[start:]])
 
         return self.mean_rewards[nr_eval_episodes]
