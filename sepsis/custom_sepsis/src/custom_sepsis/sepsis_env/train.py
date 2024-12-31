@@ -105,7 +105,7 @@ def train_dqn(env, nr_iter, name):
     model.learn(nr_iter, callback=reward_callback)
     optimization = Training(model, nr_iter, env,
                             reward_callback.episodes, f"DQN-{name}", {})
-    # optimization.save()
+    optimization.save()
     return optimization
 
 

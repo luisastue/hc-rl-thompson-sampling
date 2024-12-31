@@ -1,5 +1,5 @@
 module PPModel
-export MCMCModel, update_choicemap!, get_functions
+export update_choicemap!, get_functions
 
 using ..SepsisTypes
 using ..Sepsis
@@ -9,13 +9,6 @@ using ..Smart
 using PyCall
 sepsis_gym = pyimport("custom_sepsis")
 using Gen
-
-mutable struct MCMCModel
-    type::Symbol
-    choices::ChoiceMap
-    policies::Vector{Policy}
-    start_states::Vector{State}
-end
 
 
 function update_choicemap!(episodes::ChoiceMap, i::Int, episode::Any) #episode comes from python
