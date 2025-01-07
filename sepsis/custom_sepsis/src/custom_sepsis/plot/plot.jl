@@ -17,24 +17,64 @@ using Serialization
 using Statistics
 using CairoMakie
 
+
+function create_variants(color::RGB)
+    variant1 = RGB(clamp(red(color) * 0.9, 0.0, 1.0),  # Darker
+        clamp(green(color) * 0.9, 0.0, 1.0),
+        clamp(blue(color) * 0.9, 0.0, 1.0))
+    variant2 = RGB(clamp(red(color) * 1.05, 0.0, 1.0),  # Brighter
+        clamp(green(color) * 1.05, 0.0, 1.0),
+        clamp(blue(color) * 1.05, 0.0, 1.0))
+    variant3 = RGB(clamp(red(color) * 0.65, 0.0, 1.0),  # Halve RGB components
+        clamp(green(color) * 0.65, 0.0, 1.0),
+        clamp(blue(color) * 0.65, 0.0, 1.0))
+
+    return (variant1, variant2, variant3)
+end
+
 cols = distinguishable_colors(6, [RGB(1, 1, 1), RGB(0, 0, 0)], dropseed=true)
-colors = map(col -> (red(col), green(col), blue(col)), cols)
+colors = map(create_variants, cols)
 
 colors_dict = Dict(
-    :Simple => colors[1],
-    :Medium => colors[4],
-    :None => colors[6],
-    :Softmax => colors[3],
-    :SimplePPL => colors[2],
-    :DQN => colors[5],
+    :Simple => colors[1][2],
+    :Simple100 => colors[1][1],
+    :Simple1 => colors[1][2],
+    :Medium => colors[4][2],
+    :Medium100 => colors[4][1],
+    :Medium1 => colors[4][2],
+    :None => colors[6][2],
+    :None100 => colors[6][1],
+    :None1 => colors[6][2],
+    :Softmax => colors[3][2],
+    :Softmax100 => colors[3][1],
+    :Softmax1 => colors[3][2],
+    :SimplePPL => colors[2][2],
+    :SimplePPL100 => colors[2][1],
+    :SimplePPL1 => colors[2][2],
+    :DQN => colors[5][2],
+    :long => colors[5][1],
+    :medium => colors[5][2],
+    :short => colors[5][3],
 )
 label_dict = Dict(
     :Simple => "SimpleDBN",
+    :Simple100 => "SimpleDBN_TS100",
+    :Simple1 => "SimpleDBN_TS1",
     :Medium => "MediumDBN",
+    :Medium100 => "MediumDBN_TS100",
+    :Medium1 => "MediumDBN_TS1",
     :None => "FullDBN",
+    :None100 => "FullDBN_TS100",
+    :None1 => "FullDBN_TS1",
     :Softmax => "SoftmaxPPL",
+    :Softmax100 => "SoftmaxPPL_TS100",
+    :Softmax1 => "SoftmaxPPL_TS1",
     :SimplePPL => "SimplePPL",
-    :DQN => "DQN"
+    :SimplePPL100 => "SimplePPL_TS100",
+    :SimplePPL1 => "SimplePPL_TS1",
+    :long => "DQN_1M",
+    :medium => "DQN_35000",
+    :short => "DQN_5000",
 )
 
 struct TSType
@@ -96,11 +136,13 @@ function moving_avg(data, window_size)
 
     return smoothed
 end
-function add_dqn!(ax, dqn, window_size)
-    smoothed = moving_avg(dqn.mean_rewards, window_size)
-
-    lines!(ax, 1:length(smoothed), smoothed, color=colors_dict[:DQN],)
+function add_dqn!(ax, dqn, window_size, show_avg=true)
     lines!(ax, 1:length(dqn.mean_rewards), dqn.mean_rewards, color=(colors_dict[:DQN], 0.2), label="Mean Reward of 50 DQN runs")
+    if show_avg
+        smoothed = moving_avg(dqn.mean_rewards, window_size)
+        lines!(ax, 1:length(smoothed), smoothed, color=colors_dict[:DQN],)
+        return smoothed
+    end
     # band!(ax, 1:length(smoothed_std), smoothed .- smoothed_std, smoothed .- smoothed_std, color=(colors_dict[:DQN], 0.2))
 end
 

@@ -82,7 +82,7 @@ function value_iteration(transition_model, prev_V=zeros(n_states), gamma=0.99, t
     Q = nothing
 
     while true
-        # Compute Q-values for all state-action pairs
+        # Compute Q-values for all state-action pairs: Q(s,a) = R(s,a) .+ gamma .* sum_s'(T(s,a,s') * V(s,a,s'))
         Q = REWARDS .+ gamma .* sum(transition_model .* reshape(V, 1, 1, n_states), dims=3)
 
         # Perform Bellman update
