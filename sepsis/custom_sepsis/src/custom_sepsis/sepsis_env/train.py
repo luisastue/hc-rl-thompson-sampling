@@ -1,3 +1,6 @@
+from multiprocessing import Pool, cpu_count
+from stable_baselines3 import DQN
+from itertools import product
 import os
 import dill as pickle
 import stable_baselines3 as sb3
@@ -117,3 +120,54 @@ def train_ppo(env, nr_iter, name):
                             reward_callback.episodes, f"PPO-{name}", {})
     optimization.save()
     return optimization
+
+
+def train_and_log_rewards(params):
+    """Train a DQN model with given parameters and log rewards."""
+    # Initialize environment
+
+    # Initialize callback
+    callback = CustomLoggingCallback()
+
+    # Create and train the model
+    model = DQN(
+        "MlpPolicy",
+        true_env,
+        buffer_size=params["buffer_size"],
+        batch_size=params["batch_size"],
+        train_freq=params["train_freq"],
+        gradient_steps=params["gradient_steps"],
+        exploration_fraction=params["exploration_fraction"],
+        exploration_final_eps=params["exploration_final_eps"],
+        target_update_interval=params["target_update_interval"],
+        learning_rate=1e-4,
+        gamma=0.99,
+        verbose=0,
+    )
+
+    model.learn(total_timesteps=200000, callback=callback)
+
+    # Store rewards for this configuration
+    episode_rewards = [np.sum(episode.rewards)
+                       for episode in callback.episodes]
+    return params, episode_rewards
+
+# Combine all parameter combinations into a single list
+
+
+def create_tasks(param_grids):
+    tasks = []
+    for goal, param_grid in param_grids.items():
+        param_combinations = list(product(*param_grid.values()))
+        param_names = list(param_grid.keys())
+        for combination in param_combinations:
+            params = dict(zip(param_names, combination))
+            tasks.append((goal, params))
+    return tasks
+
+# Function to process a single task
+
+
+def process_task(task):
+    goal, params = task
+    return train_and_log_rewards(params)
