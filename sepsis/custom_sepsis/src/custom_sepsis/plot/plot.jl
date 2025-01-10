@@ -1,5 +1,5 @@
 module Plot
-export DQNType, colors_dict, label_dict, moving_avg, add_dqn!, colors, load_dqn_from_json, random_mean, TSType, load_ts_from_json, HistoryType, load_history_from_json
+export DQNType, colors_dict, label_dict, moving_avg, add_dqn!, colors, load_dqn_from_json, random_mean, TSType, load_ts_from_json, HistoryType, load_history_from_json, load_rewards_from_json
 
 using ..SepsisTypes
 using ..Sepsis
@@ -31,30 +31,30 @@ function create_variants(color::RGB)
 
     return (variant1, variant2, variant3)
 end
-
-cols = distinguishable_colors(6, [RGB(1, 1, 1), RGB(0, 0, 0)], dropseed=true)
+variables = [:Simple, :Medium, :None, :Softmax, :SimplePPL, :DQN, :QLearning]
+cols = distinguishable_colors(length(variables), [RGB(1, 1, 1), RGB(0, 0, 0)], dropseed=true)
 colors = map(create_variants, cols)
 
 colors_dict = Dict(
     :Simple => colors[1][2],
-    :Simple100 => colors[1][1],
+    :Simple100 => colors[1][2],
     :Simple1 => colors[1][2],
     :Medium => colors[4][2],
-    :Medium100 => colors[4][1],
+    :Medium100 => colors[4][2],
     :Medium1 => colors[4][2],
     :None => colors[6][2],
-    :None100 => colors[6][1],
+    :None100 => colors[6][2],
     :None1 => colors[6][2],
     :Softmax => colors[3][2],
-    :Softmax100 => colors[3][1],
+    :Softmax100 => colors[3][2],
     :Softmax1 => colors[3][2],
     :SimplePPL => colors[2][2],
-    :SimplePPL100 => colors[2][1],
+    :SimplePPL100 => colors[2][2],
     :SimplePPL1 => colors[2][2],
-    :DQN => colors[5][2],
-    :long => colors[5][1],
-    :medium => colors[5][2],
-    :short => colors[5][3],
+    :DQN_SE => colors[5][1],
+    :DQN_AR => colors[5][2],
+    :DQN_CR => colors[5][3],
+    :QLearning => colors[7][2],
 )
 label_dict = Dict(
     :Simple => "SimpleDBN",
@@ -72,9 +72,10 @@ label_dict = Dict(
     :SimplePPL => "SimplePPL",
     :SimplePPL100 => "SimplePPL_TS100",
     :SimplePPL1 => "SimplePPL_TS1",
-    :long => "DQN_1M",
-    :medium => "DQN_35000",
-    :short => "DQN_5000",
+    :DQN_SE => "DQN_SE",
+    :DQN_AR => "DQN_AR",
+    :DQN_CR => "DQN_CR",
+    :QLearning => "QLearning",
 )
 
 struct TSType
@@ -116,13 +117,25 @@ function load_history_from_json(file_path::String)::HistoryType
     return HistoryType(mean_rewards, name, info)
 end
 
-
-struct DQNType
-    # policies::Dict{Int, Vector{Policy}}
+struct MeanRewardsType
     mean_rewards::Vector{Float64}
-    std_rewards::Vector{Float64}
+    individual_runs::Vector{Vector{Float64}}
+    smoothed_mean::Vector{Float64}
+    smoothed_std::Vector{Float64}
     name::String
     info::Dict
+end
+function load_rewards_from_json(file_path)
+    json_data = JSON3.read(file_path)
+    mean_rewards = [Float64(rew) for rew in json_data["mean_rewards"]]
+    individual_runs = [[Float64(rew) for rew in r] for r in json_data["individual_runs"]]
+    smoothed_mean = [Float64(rew) for rew in json_data["smoothed_mean"]]
+    smoothed_std = [Float64(rew) for rew in json_data["smoothed_std"]]
+    name = json_data["name"]
+    info = Dict(
+        string(k) => string(v) for (k, v) in json_data["info"]
+    )
+    return MeanRewardsType(mean_rewards, individual_runs, smoothed_mean, smoothed_std, name, info)
 end
 
 function moving_avg(data, window_size)
@@ -146,17 +159,6 @@ function add_dqn!(ax, dqn, window_size, show_avg=true)
     # band!(ax, 1:length(smoothed_std), smoothed .- smoothed_std, smoothed .- smoothed_std, color=(colors_dict[:DQN], 0.2))
 end
 
-
-function load_dqn_from_json(file_path)
-    json_data = JSON3.read(file_path)
-    mean_rewards = [Float64(rew) for rew in json_data["mean_rewards"]]
-    std_rewards = [Float64(rew) for rew in json_data["std_rewards"]]
-    name = json_data["name"]
-    info = Dict(
-        string(k) => string(v) for (k, v) in json_data["info"]
-    )
-    return DQNType(mean_rewards, std_rewards, name, info)
-end
 random_mean = -0.6662000000000002 #mean([sepsis_gym.evaluate_policy(sepsis_gym.random_policy(), 1000) for i in 1:100])
 
 

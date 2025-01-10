@@ -122,9 +122,8 @@ def train_ppo(env, nr_iter, name):
     return optimization
 
 
-def train_and_log_rewards(params):
-    """Train a DQN model with given parameters and log rewards."""
-    # Initialize environment
+def train_and_log_rewards(task):
+    metric, params, run, n_steps = task
 
     # Initialize callback
     callback = CustomLoggingCallback()
@@ -145,14 +144,15 @@ def train_and_log_rewards(params):
         verbose=0,
     )
 
-    model.learn(total_timesteps=200000, callback=callback)
-
-    # Store rewards for this configuration
-    episode_rewards = [np.sum(episode.rewards)
-                       for episode in callback.episodes]
-    return params, episode_rewards
-
-# Combine all parameter combinations into a single list
+    model.learn(total_timesteps=n_steps, callback=callback)
+    optimization = Training(model, n_steps, true_env,
+                            callback.episodes, f"{metric}-{run}", {
+                                "params": params,
+                                "learning_rate": 1e-4,
+                                "gamma": 0.99,
+                            })
+    optimization.save()
+    return optimization
 
 
 def create_tasks(param_grids):
