@@ -19,42 +19,42 @@ using CairoMakie
 
 
 function create_variants(color::RGB)
-    variant1 = RGB(clamp(red(color) * 0.9, 0.0, 1.0),  # Darker
-        clamp(green(color) * 0.9, 0.0, 1.0),
-        clamp(blue(color) * 0.9, 0.0, 1.0))
-    variant2 = RGB(clamp(red(color) * 1.05, 0.0, 1.0),  # Brighter
-        clamp(green(color) * 1.05, 0.0, 1.0),
-        clamp(blue(color) * 1.05, 0.0, 1.0))
-    variant3 = RGB(clamp(red(color) * 0.65, 0.0, 1.0),  # Halve RGB components
-        clamp(green(color) * 0.65, 0.0, 1.0),
-        clamp(blue(color) * 0.65, 0.0, 1.0))
+    variant1 = RGB(clamp(red(color) * 0.8, 0.0, 1.0),  # Darker
+        clamp(green(color) * 0.8, 0.0, 1.0),
+        clamp(blue(color) * 0.8, 0.0, 1.0))
+    variant2 = RGB(clamp(red(color) * 1.2, 0.0, 1.0),  # Brighter
+        clamp(green(color) * 1.2, 0.0, 1.0),
+        clamp(blue(color) * 1.2, 0.0, 1.0))
+    variant3 = RGB(clamp(red(color) * 0.6, 0.0, 1.0),  # Halve RGB components
+        clamp(green(color) * 0.6, 0.0, 1.0),
+        clamp(blue(color) * 0.6, 0.0, 1.0))
 
     return (variant1, variant2, variant3)
 end
-variables = [:Simple, :Medium, :None, :Softmax, :SimplePPL, :DQN, :QLearning]
-cols = distinguishable_colors(length(variables), [RGB(1, 1, 1), RGB(0, 0, 0)], dropseed=true)
-colors = map(create_variants, cols)
+variables = [:Simple, :Medium, :None, :Softmax, :SimplePPL, :DQN_SE, :DQN_AR, :DQN_CR, :QLearning]
+colors = distinguishable_colors(length(variables), [RGB(1, 1, 1), RGB(0, 0, 0)], dropseed=true)
+# colors = map(create_variants, cols)
 
 colors_dict = Dict(
-    :Simple => colors[1][2],
-    :Simple100 => colors[1][2],
-    :Simple1 => colors[1][2],
-    :Medium => colors[4][2],
-    :Medium100 => colors[4][2],
-    :Medium1 => colors[4][2],
-    :None => colors[6][2],
-    :None100 => colors[6][2],
-    :None1 => colors[6][2],
-    :Softmax => colors[3][2],
-    :Softmax100 => colors[3][2],
-    :Softmax1 => colors[3][2],
-    :SimplePPL => colors[2][2],
-    :SimplePPL100 => colors[2][2],
-    :SimplePPL1 => colors[2][2],
-    :DQN_SE => colors[5][1],
-    :DQN_AR => colors[5][2],
-    :DQN_CR => colors[5][3],
-    :QLearning => colors[7][2],
+    :Simple => colors[1],
+    :Simple100 => colors[1],
+    :Simple1 => colors[1],
+    :Medium => colors[4],
+    :Medium100 => colors[4],
+    :Medium1 => colors[4],
+    :None => colors[6],
+    :None100 => colors[6],
+    :None1 => colors[6],
+    :Softmax => colors[3],
+    :Softmax100 => colors[3],
+    :Softmax1 => colors[3],
+    :SimplePPL => colors[2],
+    :SimplePPL100 => colors[2],
+    :SimplePPL1 => colors[2],
+    :DQN_SE => colors[5],
+    :DQN_AR => colors[8],
+    :DQN_CR => colors[9],
+    :QLearning => colors[7],
 )
 label_dict = Dict(
     :Simple => "SimpleDBN",

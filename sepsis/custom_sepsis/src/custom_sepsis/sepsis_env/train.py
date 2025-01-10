@@ -22,7 +22,7 @@ class Training:
         self.info["date"] = str(np.datetime64('now'))
         self.policy = None
 
-    def save(self, directory="json/dqn"):
+    def save(self, directory="data/dqn"):
         os.makedirs(directory, exist_ok=True)
         model_path = os.path.join(
             directory, f"{self.info['name']}_model.zip")
