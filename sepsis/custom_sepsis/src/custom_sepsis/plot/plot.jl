@@ -19,17 +19,20 @@ using CairoMakie
 
 
 function create_variants(color::RGB)
-    variant1 = RGB(clamp(red(color) * 0.8, 0.0, 1.0),
-        clamp(green(color) * 0.8, 0.0, 1.0),
-        clamp(blue(color) * 0.8, 0.0, 1.0))
+    variant1 = RGB(clamp(red(color) * 1.2, 0.0, 1.0),
+        clamp(green(color) * 1.2, 0.0, 1.0),
+        clamp(blue(color) * 1.2, 0.0, 1.0))
     variant2 = RGB(clamp(red(color) * 1, 0.0, 1.0),
         clamp(green(color) * 1, 0.0, 1.0),
         clamp(blue(color) * 1, 0.0, 1.0))
-    variant3 = RGB(clamp(red(color) * 1.2, 0.0, 1.0),
-        clamp(green(color) * 1.2, 0.0, 1.0),
-        clamp(blue(color) * 1.2, 0.0, 1.0))
+    variant3 = RGB(clamp(red(color) * 0.8, 0.0, 1.0),
+        clamp(green(color) * 0.8, 0.0, 1.0),
+        clamp(blue(color) * 0.8, 0.0, 1.0))
+    variant4 = RGB(clamp(red(color) * 0.65, 0.0, 1.0),
+        clamp(green(color) * 0.65, 0.0, 1.0),
+        clamp(blue(color) * 0.65, 0.0, 1.0))
 
-    return (variant1, variant2, variant3)
+    return (variant1, variant2, variant3, variant4)
 end
 variables = [:Simple, :Medium, :None, :Softmax, :SimplePPL, :DQN_S, :QLearning]
 cols = distinguishable_colors(length(variables), [RGB(1, 1, 1), RGB(0, 0, 0)], dropseed=true)
@@ -44,16 +47,17 @@ colors_dict = Dict(
     :Medium1 => colors[4][2],
     :None => colors[6][2],
     :None100 => colors[6][2],
-    :None1 => colors[6][2],
+    :None100P => colors[6][2],
     :Softmax => colors[3][2],
     :Softmax100 => colors[3][2],
     :Softmax1 => colors[3][2],
     :SimplePPL => colors[2][2],
     :SimplePPL100 => colors[2][2],
     :SimplePPL1 => colors[2][2],
-    :DQN_S => colors[5][1],
-    :DQN_M => colors[5][2],
-    :DQN_L => colors[5][3],
+    :DQN_SS => colors[5][1],
+    :DQN_S => colors[5][2],
+    :DQN_M => colors[5][3],
+    :DQN_L => colors[5][4],
     :QLearning => colors[7][2],
 )
 
@@ -66,7 +70,7 @@ label_dict = Dict(
     :Medium1 => "MediumDBN_TS1",
     :None => "FullDBN",
     :None100 => "FullDBN_TS100",
-    :None1 => "FullDBN_TS1",
+    :None100P => "FullDBN_SmallPrior_TS100",
     :Softmax => "SoftmaxPPL",
     :Softmax100 => "SoftmaxPPL_TS100",
     :Softmax1 => "SoftmaxPPL_TS1",
@@ -76,6 +80,7 @@ label_dict = Dict(
     :DQN_S => "DQN_S",
     :DQN_L => "DQN_L",
     :DQN_M => "DQN_M",
+    :DQN_SS => "DQN_SS",
     :QLearning => "QLearning",
 )
 
@@ -150,6 +155,7 @@ function moving_avg(data, window_size)
 
     return smoothed
 end
+
 function add_dqn!(ax, dqn, window_size, show_avg=true)
     lines!(ax, 1:length(dqn.mean_rewards), dqn.mean_rewards, color=(colors_dict[:DQN], 0.2), label="Mean Reward of 50 DQN runs")
     if show_avg

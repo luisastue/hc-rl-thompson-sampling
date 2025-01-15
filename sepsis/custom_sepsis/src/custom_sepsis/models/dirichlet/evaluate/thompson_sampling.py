@@ -19,7 +19,7 @@ class DirThompsonSampling():
         self.mean_rewards = mean_rewards
         self.rewards = rewards
 
-    def save_json(self, directory="json/dirichlet/ts"):
+    def save_json(self, directory="json/dbn/ts"):
         os.makedirs(directory, exist_ok=True)
         object_path = os.path.join(
             directory, f"{self.name}.json"
