@@ -29,7 +29,7 @@ class DirThompsonSampling():
             json_file = {
                 "info": self.info,
                 "model": self.model.to_dict(),
-                "policies": {k: compress_policy(p) for k, p in self.policies.items()},
+                "policies": {k: p for k, p in self.policies.items()},
                 "models": {k: self.model.to_dict_counts(v) for k, v in self.models.items()},
                 "mean_rewards": {k: v for k, v in self.mean_rewards.items()},
                 "rewards": {k: rew for k, rew in self.rewards.items()}
