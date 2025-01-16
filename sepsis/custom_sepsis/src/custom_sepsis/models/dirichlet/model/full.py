@@ -50,14 +50,14 @@ class FullModel(DirModel):
 
     @staticmethod
     def from_dict_counts(state_counts):
-        return state_counts
+        return FullModel.decompress_state_counts(state_counts)
 
     @staticmethod
     def decompress_state_counts(state_counts):
 
         non_one_indices = tuple(np.array(idx, dtype=int)
                                 for idx in state_counts["non_one_indices"])
-        non_one_values = np.array(state_counts["non_one_values"], dtype=int)
+        non_one_values = np.array(state_counts["non_one_values"], dtype=float)
 
         # Decompress the array
         decompressed_array = decompress_array(
